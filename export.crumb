@@ -1,0 +1,42 @@
+
+svg = { data props target ->
+
+  rows = (get props 0)
+  columns = (get props 1)
+  pixel_width = (get props 2)
+
+  open = (join 
+    "<svg version=\"1.1\" baseProfile=\"full\"  width=\""
+    (string(multiply columns pixel_width))
+    "\" height=\""
+    (string(multiply rows pixel_width))
+    "\" xmlns=\"http://www.w3.org/2000/svg\">"
+  )
+
+  close = "</svg>"
+
+  rendered = (reduce  
+    (map mock_data { item index ->
+      <- (use "./colors.crumb" {
+        <- (join 
+          "<rect x=\""
+          (string (multiply (remainder index columns) pixel_width))
+          "\" y=\""
+          (string (multiply (integer (divide index columns)) pixel_width))
+          "\" width=\""
+          (string pixel_width)
+          "\" height=\""
+          (string pixel_width)
+          "\" fill=\"#" 
+          (ansi_8_to_hex item )
+          "\" />\n"
+          )
+      })
+    }) { accum item index -> <- (join accum item) } "")
+
+  saved = (reduce data { accum item index -> <- (join accum ":" (string item)) } "")
+
+  str = (join open "\n" rendered "\n" close "\n" "<!-- crumbicon:" saved "-->")
+  
+  (write_file target str)
+}

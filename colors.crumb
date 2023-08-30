@@ -1,0 +1,164 @@
+string_to_list = { str -> <- (map (range (length str)) {index _ -> <- (get str index)}) }
+list_to_string = { arr -> <- (reduce arr {accum item _ -> <- (join accum (string item))} "")}
+
+string_reverse = { str -> 
+    <- (reduce (string_to_list str) { accum item index -> 
+      accum = (join item accum)
+      <- accum
+    } "")
+}
+
+string_pad_start = { str count padder -> 
+  <- (if (greater_than (add (length str) 1) count){
+      <-str
+  }
+  {
+    <- (join (list_to_string (map (range (subtract count (length str))) {_ _ -> <- padder})) str)
+  })
+}
+
+hex_char_to_dec = { char -> 
+  <- (find (list "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "a" "b" "c" "d" "e" "f") char)
+}
+
+base_other_to_10 = { str base ->
+  <- (reduce (string_to_list str) { acc char index -> 
+    <- ( add acc (multiply ( hex_char_to_dec char ) ( power base (subtract (length (string_to_list str)) index 1))))
+  } 0)
+}
+
+base_16_to_10 = { str -> 
+  <- (base_other_to_10 str 16)
+}
+
+dec_to_hex_char = { num ->
+  <- (get (list "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "a" "b" "c" "d" "e" "f") num)
+}
+
+base_10_to_other = { val base ->
+  convert = { val res -> 
+    <-(if (greater_than val (subtract base 1)) {
+      res = (join res (dec_to_hex_char(remainder val base)))
+      <- (convert (integer (divide val base)) res)
+    }{
+      res = (join res (dec_to_hex_char val) )
+      <- res
+    })
+  }
+
+  <- (string_reverse (convert val ""))
+}
+
+base_10_to_2 = { val ->
+  <- (base_10_to_other val 2)
+}
+
+base_10_to_6 = { val ->
+  <- (base_10_to_other val 6)
+}
+
+base_10_to_16 = { val ->
+  <- (base_10_to_other val 16)
+}
+
+// HEX to RGB
+// #dd00ff to [221, 0, 255]
+hex_to_rgb = { str ->
+  <- (list (base_16_to_10(get str 0 2)) (base_16_to_10(get str 2 4)) (base_16_to_10(get str 4 6)))
+}
+
+// RGB to HEX
+// [221, 0, 255] to #dd00ff
+rgb_to_hex = { arr ->
+  <- (list_to_string (map arr {item index ->
+    <- (string_pad_start (base_10_to_16 item) 2 "0")
+  }))
+}
+
+// RGB to ANSI 8
+// [221, 0, 255] to 165
+rgb_to_ansi_8 = { arr ->
+  <- (if 
+    (and 
+      (is (get arr 0) (get arr 1)) 
+      (is (get arr 1) (get arr 2)) 
+    ) {
+      // create a gray scale between the black and white (not including)
+      // keep values close to black and white in the 216 palette
+      // note: need round function not integer?
+      gray = (multiply (divide (get arr 0) 240) 24)
+      // leave white and black in the 216 palette
+      <- (if (greater_than gray 24) {
+        <- 231
+      } {
+        <- (if (less_than gray 1) {
+          <- 16
+        } {
+          <- (integer (add 231 gray))
+        })
+      })
+  
+    } {
+      // the real ANSI palette is not equally spaced
+      // it goes 0, 95, 135, 175, 215, 255
+      // cutoffs for rgb allocation are are 75, 115, 155, 195, 235
+      // for each r, g and b, if under 75 0, else generate "cuts" of 40
+      // multiply by 6 powered.
+      <- (reduce arr { val item index ->
+        <- (if (less_than item 75) {
+          <- val
+        } { 
+          <- (add val (multiply (add 1 ( integer (multiply (divide (subtract item 75) 200) 5))) (power 6 (subtract 2 index))))
+        })
+      } 16)
+    }
+  )
+}
+
+// ANSI 8 to RGB
+// 165 to [221, 0, 255] 
+ansi_8_to_rgb = { num ->
+  <- (if (is num 0) { <- (list 0 0 0) }{
+    <-(if (and (greater_than num 0) (less_than num 7)){
+      <- (map (string_to_list (string_reverse(string_pad_start (base_10_to_2 num) 3 "0"))) {item _ -> <- (multiply (integer item) 127)})
+    }{
+      <-(if (is num 7) { <- (list 192 192 192)} {
+        <-(if (is num 8) { <- (list 127 127 127)} {
+          <-(if (and (greater_than num 8) (less_than num 16)){
+            <- (map (string_to_list(string_reverse(string_pad_start (base_10_to_2 (subtract num 8)) 3 "0"))) {item _ -> <- (multiply (integer item) 255)})
+          }{
+            <- (if (is num 16) { <- (list 0 0 0) }{
+              <- (if (and (greater_than num 16) (less_than num 232)) {
+                // the real ANSI palette is not equally spaced
+                // it goes 0, 95, 135, 175, 215, 255
+                // Math.floor(parseInt(x, 10) * 200 / 5) + 55)
+                <- (map (string_to_list(string_pad_start (base_10_to_6 (subtract num 16)) 3 "0")) {item _ -> 
+                  <- (integer (add (divide (multiply (integer item) 200) 5) 55))
+                })
+              }{
+                <- (if (and (greater_than num 231) (less_than num 256)) {
+                  // create a gray scale between the black and white (not including)
+                  gray = (subtract(integer (divide (multiply (subtract num 231) 240) 24)) 2)
+                  <- (list gray gray gray)
+                } )
+              })
+            })
+          })
+        })
+      })
+    })
+  })
+}
+
+// ANSI 8 to HEX
+// 165 to #dd00ff
+ansi_8_to_hex = { num -> 
+  <- (rgb_to_hex (ansi_8_to_rgb num))
+}
+
+// HEX to ANSI 8
+// #dd00ff to 165
+hex_to_ansi_8 = { str -> 
+  <- (rgb_to_ansi_8  (hex_to_rgb str))
+}
+

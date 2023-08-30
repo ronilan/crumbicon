@@ -1,0 +1,11 @@
+file = (if (is (length arguments) 2) {<- (get arguments 1)} {<- "favicon.svg"})
+
+// write the ui
+
+mock_data = (map (range (multiply 8 32)) {_ index -> 
+  <- index
+})
+
+(use "export.crumb" {
+  (svg mock_data (list 16 16 10) file)
+})
