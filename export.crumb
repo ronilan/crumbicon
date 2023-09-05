@@ -17,7 +17,7 @@ svg = { data props target ->
 
   rendered = (reduce  
     (map data { item index ->
-      <- (use "./colors.crumb" {
+      <- (use "./usables/colors.crumb" {
         <- (join 
           "<rect x=\""
           (string (multiply (remainder index columns) pixel_width))

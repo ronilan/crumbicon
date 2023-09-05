@@ -103,8 +103,8 @@ run = { components state ->
     // get current event
     curr = (event)
 
-    // make sure we have an event
-    <- (if (greater_than (length curr) 1) {
+    // mouse event longer than 6
+    <- (if (greater_than (length curr) 6) {
 
         // mosemove or click
         mouse_xy = (if (or (is (get curr 0 5) "\e[<35") (is (get curr 0 4) "\e[<0")) {
