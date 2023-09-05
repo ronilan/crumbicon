@@ -1,0 +1,247 @@
+state = (list
+  void // paintbrush color
+  (map (range 256) { _ _ -> <- void}) // canvas data 
+)
+
+components = (list
+  // *** canvas
+  ({
+    y = 1
+    width = 32
+    height = 16
+    // center position on x
+    x = (integer (divide (subtract (columns) width) 2))
+
+    on_hover = {}
+    on_click = {
+      r = (subtract (get mouse_xy 0) (get (get component 1) 1))
+      c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 1) 1 ) (get (get component 1) 0) )) 1) 2))
+      width = (integer (divide (get (get component 1) 2) 2))
+
+      color = (get state 0)
+
+      data = (set (get state 1) color (add (multiply r width) c))
+
+      mapped = (map (range (multiply 32 16)) { item index -> 
+        halfindex = (integer (divide index 2))
+        <- (if (is (get data halfindex) void){
+          <- ":"
+        }{
+          <- (join "\e[48;5;" (string (get data halfindex)) "m" " \e[0m")
+        })
+
+      })
+
+      (draw (set component mapped 0))
+
+      <- (set state data 1)
+    }
+
+    cells = (map (range (multiply 32 16)) { item index ->  <- ":" })
+
+    <- (list cells(list x y width height) (list on_hover on_click))
+  })
+
+  // *** color_picker
+  ({
+    y = (add 1 16 1)
+    width = 36
+    height = 6
+    // center position on x and to right
+    x = (add (integer (divide (subtract (columns) width) 2)) 2)
+
+    on_hover = {}
+    on_click = {
+      // calculate color
+      r = (subtract (get mouse_xy 0) (get (get component 1) 1))
+      c = (subtract (integer (subtract (add (get mouse_xy 1) 1 ) (get (get component 1) 0) )) 1)
+      color = (add (add (multiply r (get (get component 1) 2)) c) 16)
+
+      // set the look of the color selected component
+      color_selected = (get components 4)
+      color_selected_look = (get color_selected 0)
+
+      arr = (map color_selected_look { item index ->
+        <-(if (is index 0){
+          <- (join "\e[48;5;" (string color) "m" item)
+        }{
+          <-(if (is index (subtract (length color_selected_look) 1)){
+            <- (join item "\e[0m")
+          }{
+            <- item
+          })
+        })
+      })
+
+      (draw (set color_selected arr 0))
+ 
+      // update state
+      <- (set state color 0)
+    }
+
+    cells = (map (range 216) { item index -> 
+      <- (join
+        (join
+          "\e[48;5;" (string (add index 16)) "m" 
+          " " 
+        )
+        "\e[0m"
+      ) 
+    })
+
+    <- (list cells (list x y width height) (list on_hover on_click))
+  })
+
+  // *** gray_picker
+  ({
+    y = (add 1 16 1)
+    width = 4
+    height = 6
+    // center position on x and left
+    x = (subtract (integer (divide (subtract (columns) width) 2)) 19)
+
+    on_hover = {}
+    on_click = {
+      // calculate color
+      r = (subtract (get mouse_xy 0) (get (get component 1) 1))
+      c = (subtract (integer (subtract (add (get mouse_xy 1) 1 ) (get (get component 1) 0) )) 1)
+      color = (add (add (multiply r (get (get component 1) 2)) c) 232)
+
+      // set the look of the color selected component
+      color_selected = (get components 4)
+      color_selected_look = (get color_selected 0)
+
+      arr = (map color_selected_look { item index ->
+        <-(if (is index 0){
+          <- (join "\e[48;5;" (string color) "m" item)
+        }{
+          <-(if (is index (subtract (length color_selected_look) 1)){
+            <- (join item "\e[0m")
+          }{
+            <- item
+          })
+        })
+      })
+
+      (draw (set color_selected arr 0))
+ 
+      // update state
+      <- (set state color 0)
+
+    }
+
+    cells = (map (range 24) { item index -> 
+      <- (join 
+        (join
+          "\e[48;5;" (string (add index 232)) "m" 
+          " " 
+        )
+        "\e[0m"
+      ) 
+    })
+
+    <- (list cells (list x y width height) (list on_hover on_click))
+  })
+
+  // *** empty_picker
+
+  ({
+    y = (add 1 16 1)
+    width = 2
+    height = 1
+    // center position on x and left
+    x = (add (integer (divide (subtract (columns) width) 2)) 22)
+
+    on_hover = {}
+    on_click = {
+      // set the look of the color selected component
+      color_selected = (get components 6)
+      color_selected_look = (get color_selected 0)
+
+      arr = (map color_selected_look { item index ->
+        <- item
+      })
+
+      (draw (set color_selected arr 0))
+ 
+      // update state
+      <- (set state void 0)
+
+    }
+
+    arr = (list ":" ":" )
+
+    <- (list arr (list x y width height) (list on_hover on_click))
+  })
+
+  // *** color_selected
+  ({
+    y = 1 //(add 1 16 1)
+    width = 1
+    height = 16
+    // center position on x and left
+    x = (subtract (integer (divide (subtract (columns) width) 2)) 17)
+
+    on_hover = {}
+    on_click = {}
+
+    arr = (list " "  " " " " " " " " " " " " " " " " " " " " " " " " " " " " " ")
+
+    <- (list arr (list x y width height) (list on_hover on_click))
+  })
+
+  // *** button_save
+  ({
+    y = 1
+    width = 8
+    height = 3
+
+    x = (add (integer (divide (subtract (columns) width) 2)) 23)
+
+    on_hover = {}
+    on_click = {
+      state = "stop"
+      <- state
+    }
+
+    arr = (list
+      "╔" "═" "═" "═" "═" "═" "═" "╗"
+      "║" " " "S" "a" "v" "e" " " "║"
+      "╚" "═" "═" "═" "═" "═" "═" "╝"
+    )
+
+    <- (list arr (list x y width height) (list on_hover on_click))
+  })
+
+
+  // *** button_clear
+  ({
+    y = 1
+    width = 8
+    height = 3
+    // 5 pixels from right side
+    x = (subtract (integer (divide (subtract (columns) width) 2)) 24)
+
+    on_hover = {}
+    on_click = {
+
+      // redraw the canvas
+      canvas = (get components 0)
+      cells = (map (range (multiply 32 16)) { item index ->  <- ":" })
+
+      (draw (set canvas cells 0))
+
+      // reset canvas data in state
+      <- (set state (map (range 256) { _ _ -> <- void}) 1)
+
+    }
+
+    arr = (list
+      "╔" "═" "═" "═" "═" "═" "═" "╗"
+      "║" " " "W" "i" "p" "e" " " "║"
+      "╚" "═" "═" "═" "═" "═" "═" "╝"
+    )
+
+    <- (list arr (list x y width height) (list on_hover on_click))
+  })
+)

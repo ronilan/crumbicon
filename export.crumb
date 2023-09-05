@@ -1,5 +1,6 @@
-
 svg = { data props target ->
+
+  (print "Exporting" target "\n")
 
   rows = (get props 0)
   columns = (get props 1)
@@ -12,11 +13,10 @@ svg = { data props target ->
     (string(multiply rows pixel_width))
     "\" xmlns=\"http://www.w3.org/2000/svg\">"
   )
-
   close = "</svg>"
 
   rendered = (reduce  
-    (map mock_data { item index ->
+    (map data { item index ->
       <- (use "./colors.crumb" {
         <- (join 
           "<rect x=\""
@@ -27,16 +27,24 @@ svg = { data props target ->
           (string pixel_width)
           "\" height=\""
           (string pixel_width)
-          "\" fill=\"#" 
-          (ansi_8_to_hex item )
+          "\" fill=\"" 
+          (if (is item void) {<- "none"} {<- (join "#" (ansi_8_to_hex item))})
           "\" />\n"
           )
       })
     }) { accum item index -> <- (join accum item) } "")
 
-  saved = (reduce data { accum item index -> <- (join accum ":" (string item)) } "")
+  saved = (reduce data { accum item index -> 
+    <- (join accum ":" (if (is item void) {
+      <- "void"
+    } {
+      <- (string item) 
+    })) 
+  } "")
 
   str = (join open "\n" rendered "\n" close "\n" "<!-- crumbicon:" saved "-->")
   
   (write_file target str)
+
+  (print target "saved\n")
 }

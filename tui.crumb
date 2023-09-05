@@ -1,0 +1,173 @@
+run = { components state ->
+
+  // ** utility function
+
+  // mouse calculation
+  // component: a list describing a tui component
+  // mouse_xy: a list with current  x y mouse position
+  mouse_over = { component mouse_xy ->
+    // deconstruct for readability
+    props = (get component 1)
+    
+    x = (get props 0)
+    y = (get props 1)
+    width = (get props 2)
+    height = (get props 3)
+
+    row = (integer (get mouse_xy 0))
+    column = (integer (get mouse_xy 1))
+
+    // by calculating the position of on the screen 
+    // decide if the mouse is over the component. 
+    <- (if (and
+        (and 
+          (greater_than column (subtract x 1))
+          (less_than column (add x width 0))
+        )
+        (and 
+          (greater_than row (subtract y 1))
+          (less_than row (add y height 0))
+        )
+      )
+    {
+      <- 1
+    } {
+      <- void
+    })
+  }
+ 
+  // trigger events
+  mouse_hover = { component mouse_xy ->
+    <- (if (is (mouse_over component mouse_xy) 1)
+    {
+      <- ((get (get component 2) 0)) // on_hover
+    } {
+      <- void
+    })
+  }
+
+  mouse_click = { component mouse_xy ->
+    <- (if (is (mouse_over component mouse_xy) 1)
+    {
+      <- ((get (get component 2) 1)) // on_click
+    } {
+      <- void
+    })
+  }
+
+  // drawing components
+  draw = { component ->
+    // deconstruct for readability
+    props = (get component 1)
+
+    // all calculations are on a screen where top left is 0, 0
+    // escape codes are on a system based on 1, 1
+    x = (add (get props 0) 1)
+    y = (add (get props 1) 1)
+    width = (get props 2)
+    height = (get props 3)
+
+    component_look = (get component 0)
+
+    // jump to mouse_xy
+    (print (join "\e[" (string y) ";" (string x) "H"))
+
+    // print cell by cell
+    (loop height { j ->
+      (loop width { i ->
+        (print (get component_look (add (multiply j width) i) ))
+      })
+      // jump to position for each row
+      (print (join "\e[" (string (add y j 1)) ";" (string x) "H"))
+    })
+  }
+
+  // ** setup
+
+  // add the mouse position to the state as last item after user supplied
+  // currently debug/fyi
+  state = (insert state (list 0 0) )
+
+  // hide cursor
+  (print "\e[?25l")
+  // clear
+  (print "\e[2J\e[H")
+  // initial render
+  (loop (length components) { i -> 
+    (draw (get components i))
+  })
+
+  // ** event loop
+
+  result = (until "stop" {state n ->
+    // get current event
+    curr = (event)
+
+    // make sure we have an event
+    <- (if (greater_than (length curr) 1) {
+
+        // mosemove or click
+        mouse_xy = (if (or (is (get curr 0 5) "\e[<35") (is (get curr 0 4) "\e[<0")) {
+            // get mouse_xy part of ansi code
+            // code for move and click are of different length
+            start_index = (add (find curr ";") 1)
+            mouse_row_column = (get curr start_index (subtract (length curr) 1))
+
+            split_index = (find mouse_row_column ";")
+            mouse_xy = (list 
+              (subtract (integer (get mouse_row_column (add 1 split_index) (length mouse_row_column))) 1)
+              (subtract (integer (get mouse_row_column 0 split_index)) 1)
+            )
+            <- mouse_xy
+          } {
+            <- (get state (subtract (length state) 1))
+          })
+
+        // update mouse position
+        state = (set state mouse_xy (subtract (length state) 1) )
+
+        mouse_over_componant_at_index = (reduce components {accum component index ->
+          <- (if (is void (mouse_over component mouse_xy)){<-accum}{<-index}) 
+        } void)
+
+       // move
+        state = (if (is mouse_over_componant_at_index void) {<-state}{
+          component = (get components mouse_over_componant_at_index)
+          e = (mouse_hover component mouse_xy)
+
+          <- (if (is e void) {
+            <- state
+          } {
+            <- e
+          })
+        })
+
+        // click
+        c = (if (is (get curr 0 4) "\e[<0") {
+          <- (if (is mouse_over_componant_at_index void) {<-void}{
+            component = (get components mouse_over_componant_at_index)
+            e = (mouse_click component mouse_xy)
+
+            <- (if (is e void) {
+              <- state
+            } {
+              <- e
+            })
+          })
+        })
+        state = (if (is c void) {<- state} {<- c})
+
+        <- state
+    } {<- state})
+  } state)
+
+  // ** tear down
+
+  // hide cursor
+  (print "\e[?25h")
+  // clear
+  (print "\e[2J\e[H")
+
+  <- (get result 1)
+}
+
