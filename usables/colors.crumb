@@ -159,6 +159,46 @@ ansi_8_to_hex = { num ->
 // HEX to ANSI 8
 // #dd00ff to 165
 hex_to_ansi_8 = { str -> 
-  <- (rgb_to_ansi_8  (hex_to_rgb str))
+  <- (rgb_to_ansi_8 (hex_to_rgb str))
 }
 
+ansi_from_color_definition = { color_definition ->
+    <- (if (is (type color_definition) "list") {
+    <- (rgb_to_ansi_8 color_definition)
+  }{
+    <- (if (is (type color_definition) "string") {
+      <- (if (is (get color_definition 0) "#") {
+        <- (hex_to_ansi_8 (get color_definition 1 (length color_definition)))
+      } {
+        <- (hex_to_ansi_8 color_definition)
+      })
+    }{
+      <- color_definition
+    })
+  })
+}
+
+color = { color_definition str ->
+  <- (if (is (type str) "string"){
+    <- (join
+      "\e[38;5;" (string (ansi_from_color_definition color_definition)) "m" str "\e[0;0m"
+    )
+  }{
+    <- str
+  })
+}
+
+background = { color_definition str ->
+  <- (if (is (type str) "string"){
+    <- (join
+      "\e[48;5;" (string (ansi_from_color_definition color_definition)) "m" str "\e[0;0m"
+    )
+  }{
+    <- str
+  })
+}
+
+bold = { str -> <- (join "\e[1m" str "\e[21m") }
+faint = { str -> <- (join "\e[2m" str "\e[22m") }
+inverse = { str -> <- (join "\e[7m" str "\e[27m") }
+underline = { str -> <- (join "\e[4m" str "\e[24m") }

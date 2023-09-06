@@ -4,6 +4,7 @@ state = (list
 )
 
 components = (list
+
   // *** canvas
   ({
     y = 1
@@ -155,7 +156,7 @@ components = (list
     on_hover = {}
     on_click = {
       // set the look of the color selected component
-      color_selected = (get components 6)
+      color_selected = (get components 4)
       color_selected_look = (get color_selected 0)
 
       arr = (map color_selected_look { item index ->
@@ -212,7 +213,6 @@ components = (list
 
     <- (list arr (list x y width height) (list on_hover on_click))
   })
-
 
   // *** button_clear
   ({
