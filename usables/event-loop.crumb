@@ -1,0 +1,128 @@
+start = { listeners state ->
+  // trigger events
+  trigger = { event_pos_in_list listener ->
+    events = (get listener 2)
+    <- (if (is events void) {
+      <- void
+    } {
+
+      fn = (get events event_pos_in_list)
+      <- (if (is fn void) {
+        <- void
+      } {
+        <- (fn)
+      })
+    })
+  }
+
+  every_loop = { listener ->
+    <- (trigger 0 listener) // on_loop
+  }
+
+  every_keypress = { listener ->
+    <- (trigger 1 listener) // on_keypress
+  }
+
+  every_mouse_move = { listener mouse_xy ->
+    <- (trigger 2 listener) // on_move
+  }
+
+  every_mouse_click = { listener mouse_xy ->
+    <- (trigger 3 listener) // on_click
+  }
+
+  // ** event loop
+  result = (until "stop" {state loop_count ->
+    // get current event
+    curr = (event)
+
+    // loop "synthetic event"
+    state = (reduce listeners { accum item index -> 
+      e = (every_loop (get listeners index))
+      <- (if (is e void) {
+        <- accum
+      } {
+        accum = e
+        <- accum
+      })
+    } state)
+
+    // keypress
+    state = (if (and (greater_than (length curr) 0) (less_than (length curr) 6)) {
+      key_pressed = (if (not (is (get curr 0) "\e")) {
+            <- curr
+          } {
+            // TODO process arrows and function keys (e.g "\e"[A)
+            //  (debug (get curr 1 (length curr)))
+            <- void
+          })
+
+      <- (reduce listeners { accum item index -> 
+        e = (every_keypress (get listeners index))
+        <- (if (is e void) {
+          <- accum
+        } {
+          accum = e
+          <- accum
+        })
+      } state) 
+    } {<- state})
+
+    // mouse
+    state = (if (greater_than (length curr) 6) {
+        // base
+        // 0, 1, 2 - mouse button clicked (generally from left to right)
+        // 32 move - (35 means 32 + 3 button is "released")
+        // 64 scroll up  (64 means 64 + 0 button is pressed, thus scroll)
+        // modifiers
+        // +4 shift
+        // +8 meta
+        // +16 control
+        // e.g
+        // [<35;12;7M
+
+        <- (if (is (get curr 1 3) "[<") {
+          first_delimiter = (find curr ";")
+
+          mouse_code = (integer (get curr 3 first_delimiter))
+          mouse_row_column = (get curr (add first_delimiter 1) (subtract (length curr) 1))
+
+          second_delimiter = (find mouse_row_column ";")
+
+          mouse_xy = (list 
+            (subtract (integer (get mouse_row_column 0 second_delimiter)) 1)
+            (subtract (integer (get mouse_row_column (add 1 second_delimiter) (length mouse_row_column))) 1)
+          )
+
+          // mouse move
+          state = (reduce listeners { accum item index -> 
+            e = (every_mouse_move (get listeners index) mouse_xy)
+            <- (if (is e void) {
+              <- accum
+            } {
+              <- e
+            })
+          } state)
+
+          // mouse click
+          state = (if (or (is mouse_code 32) (is mouse_code 0)) {
+            <- (reduce listeners { accum item index -> 
+              e = (every_mouse_click (get listeners index) mouse_xy)
+              <- (if (is e void) {
+                <- accum
+              } {
+                <- e
+              })
+            } state)
+          } {
+            <- state
+          })
+
+          <- state
+        } {<- state})
+    } {<- state})
+    <- state
+  } state)
+
+  <- result
+}

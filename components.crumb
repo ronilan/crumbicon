@@ -13,34 +13,37 @@ components = (list
     // center position on x
     x = (integer (divide (subtract (columns) width) 2))
 
-    on_hover = {}
     on_click = {
-      r = (subtract (get mouse_xy 0) (get (get component 1) 1))
-      c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 1) 1 ) (get (get component 1) 0) )) 1) 2))
-      width = (integer (divide (get (get component 1) 2) 2))
+      <- (if (is (mouse_over listener mouse_xy) 1) {
+        r = (subtract (get mouse_xy 1) (get (get listener 1) 1))
+        c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get (get listener 1) 0) )) 1) 2))
+        width = (integer (divide (get (get listener 1) 2) 2))
 
-      color = (get state 0)
+        color = (get state 0)
 
-      data = (set (get state 1) color (add (multiply r width) c))
+        data = (set (get state 1) color (add (multiply r width) c))
 
-      mapped = (map (range (multiply 32 16)) { item index -> 
-        halfindex = (integer (divide index 2))
-        <- (if (is (get data halfindex) void){
-          <- ":"
-        }{
-          <- (join "\e[48;5;" (string (get data halfindex)) "m" " \e[0m")
+        mapped = (map (range (multiply 32 16)) { item index -> 
+          halfindex = (integer (divide index 2))
+          <- (if (is (get data halfindex) void){
+            <- ":"
+          }{
+            <- (join "\e[48;5;" (string (get data halfindex)) "m" " \e[0m")
+          })
+
         })
 
+        (draw (set listener mapped 0))
+
+        <- (set state data 1)
+      } {
+        <- void
       })
-
-      (draw (set component mapped 0))
-
-      <- (set state data 1)
     }
 
     cells = (map (range (multiply 32 16)) { item index ->  <- ":" })
 
-    <- (list cells(list x y width height) (list on_hover on_click))
+    <- (list cells(list x y width height) (list void void void on_click))
   })
 
   // *** color_picker
@@ -51,33 +54,36 @@ components = (list
     // center position on x and to right
     x = (add (integer (divide (subtract (columns) width) 2)) 2)
 
-    on_hover = {}
     on_click = {
-      // calculate color
-      r = (subtract (get mouse_xy 0) (get (get component 1) 1))
-      c = (subtract (integer (subtract (add (get mouse_xy 1) 1 ) (get (get component 1) 0) )) 1)
-      color = (add (add (multiply r (get (get component 1) 2)) c) 16)
+      <- (if (is (mouse_over listener mouse_xy) 1) {
+        // calculate color
+        r = (subtract (get mouse_xy 1) (get (get listener 1) 1))
+        c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get (get listener 1) 0) )) 1)
+        color = (add (add (multiply r (get (get listener 1) 2)) c) 16)
 
-      // set the look of the color selected component
-      color_selected = (get components 4)
-      color_selected_look = (get color_selected 0)
+        // set the look of the color selected listener
+        color_selected = (get components 4)
+        color_selected_look = (get color_selected 0)
 
-      arr = (map color_selected_look { item index ->
-        <-(if (is index 0){
-          <- (join "\e[48;5;" (string color) "m" item)
-        }{
-          <-(if (is index (subtract (length color_selected_look) 1)){
-            <- (join item "\e[0m")
+        arr = (map color_selected_look { item index ->
+          <-(if (is index 0){
+            <- (join "\e[48;5;" (string color) "m" item)
           }{
-            <- item
+            <-(if (is index (subtract (length color_selected_look) 1)){
+              <- (join item "\e[0m")
+            }{
+              <- item
+            })
           })
         })
-      })
 
-      (draw (set color_selected arr 0))
- 
-      // update state
-      <- (set state color 0)
+        (draw (set color_selected arr 0))
+   
+        // update state
+        <- (set state color 0)
+      } {
+        <- void
+      })
     }
 
     cells = (map (range 216) { item index -> 
@@ -90,7 +96,7 @@ components = (list
       ) 
     })
 
-    <- (list cells (list x y width height) (list on_hover on_click))
+    <- (list cells (list x y width height) (list void void void on_click))
   })
 
   // *** gray_picker
@@ -101,34 +107,36 @@ components = (list
     // center position on x and left
     x = (subtract (integer (divide (subtract (columns) width) 2)) 19)
 
-    on_hover = {}
     on_click = {
-      // calculate color
-      r = (subtract (get mouse_xy 0) (get (get component 1) 1))
-      c = (subtract (integer (subtract (add (get mouse_xy 1) 1 ) (get (get component 1) 0) )) 1)
-      color = (add (add (multiply r (get (get component 1) 2)) c) 232)
+      <- (if (is (mouse_over listener mouse_xy) 1) {
+        // calculate color
+        r = (subtract (get mouse_xy 1) (get (get listener 1) 1))
+        c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get (get listener 1) 0) )) 1)
+        color = (add (add (multiply r (get (get listener 1) 2)) c) 232)
 
-      // set the look of the color selected component
-      color_selected = (get components 4)
-      color_selected_look = (get color_selected 0)
+        // set the look of the color selected listener
+        color_selected = (get components 4)
+        color_selected_look = (get color_selected 0)
 
-      arr = (map color_selected_look { item index ->
-        <-(if (is index 0){
-          <- (join "\e[48;5;" (string color) "m" item)
-        }{
-          <-(if (is index (subtract (length color_selected_look) 1)){
-            <- (join item "\e[0m")
+        arr = (map color_selected_look { item index ->
+          <-(if (is index 0){
+            <- (join "\e[48;5;" (string color) "m" item)
           }{
-            <- item
+            <-(if (is index (subtract (length color_selected_look) 1)){
+              <- (join item "\e[0m")
+            }{
+              <- item
+            })
           })
         })
+
+        (draw (set color_selected arr 0))
+   
+        // update state
+        <- (set state color 0)
+      } {
+        <- void
       })
-
-      (draw (set color_selected arr 0))
- 
-      // update state
-      <- (set state color 0)
-
     }
 
     cells = (map (range 24) { item index -> 
@@ -141,11 +149,10 @@ components = (list
       ) 
     })
 
-    <- (list cells (list x y width height) (list on_hover on_click))
+    <- (list cells (list x y width height) (list void void void on_click))
   })
 
   // *** empty_picker
-
   ({
     y = (add 1 16 1)
     width = 2
@@ -153,26 +160,28 @@ components = (list
     // center position on x and left
     x = (add (integer (divide (subtract (columns) width) 2)) 22)
 
-    on_hover = {}
     on_click = {
-      // set the look of the color selected component
-      color_selected = (get components 4)
-      color_selected_look = (get color_selected 0)
+      <- (if (is (mouse_over listener mouse_xy) 1) {
+        // set the look of the color selected listener
+        color_selected = (get components 4)
+        color_selected_look = (get color_selected 0)
 
-      arr = (map color_selected_look { item index ->
-        <- item
+        arr = (map color_selected_look { item index ->
+          <- item
+        })
+
+        (draw (set color_selected arr 0))
+   
+        // update state
+        <- (set state void 0)
+      } {
+        <- void
       })
-
-      (draw (set color_selected arr 0))
- 
-      // update state
-      <- (set state void 0)
-
     }
 
     arr = (list ":" ":" )
 
-    <- (list arr (list x y width height) (list on_hover on_click))
+    <- (list arr (list x y width height) (list void void void on_click))
   })
 
   // *** color_selected
@@ -183,12 +192,9 @@ components = (list
     // center position on x and left
     x = (subtract (integer (divide (subtract (columns) width) 2)) 17)
 
-    on_hover = {}
-    on_click = {}
-
     arr = (list " "  " " " " " " " " " " " " " " " " " " " " " " " " " " " " " ")
 
-    <- (list arr (list x y width height) (list on_hover on_click))
+    <- (list arr (list x y width height) void)
   })
 
   // *** button_save
@@ -199,10 +205,13 @@ components = (list
 
     x = (add (integer (divide (subtract (columns) width) 2)) 23)
 
-    on_hover = {}
     on_click = {
-      state = "stop"
-      <- state
+      <- (if (is (mouse_over listener mouse_xy) 1) {
+        state = "stop"
+        <- state
+      } {
+        <- void
+      })
     }
 
     arr = (list
@@ -211,7 +220,7 @@ components = (list
       "╚" "═" "═" "═" "═" "═" "═" "╝"
     )
 
-    <- (list arr (list x y width height) (list on_hover on_click))
+    <- (list arr (list x y width height) (list void void void on_click))
   })
 
   // *** button_clear
@@ -222,18 +231,19 @@ components = (list
     // 5 pixels from right side
     x = (subtract (integer (divide (subtract (columns) width) 2)) 24)
 
-    on_hover = {}
     on_click = {
+      <- (if (is (mouse_over listener mouse_xy) 1) {
+        // redraw the canvas
+        canvas = (get components 0)
+        cells = (map (range (multiply 32 16)) { item index ->  <- ":" })
 
-      // redraw the canvas
-      canvas = (get components 0)
-      cells = (map (range (multiply 32 16)) { item index ->  <- ":" })
+        (draw (set canvas cells 0))
 
-      (draw (set canvas cells 0))
-
-      // reset canvas data in state
-      <- (set state (map (range 256) { _ _ -> <- void}) 1)
-
+        // reset canvas data in state
+        <- (set state (map (range 256) { _ _ -> <- void}) 1)
+      } {
+        <- void
+      })
     }
 
     arr = (list
@@ -242,6 +252,60 @@ components = (list
       "╚" "═" "═" "═" "═" "═" "═" "╝"
     )
 
-    <- (list arr (list x y width height) (list on_hover on_click))
+    <- (list arr (list x y width height) (list void void void on_click))
+  })
+
+  // *** event-loop debug
+  ({
+    y = (subtract (rows) 5)
+    width = 10
+    height = 1
+    // 5 pixels from right side
+    x = (subtract (columns) 20)
+
+    on_loop = {
+      str = (string_pad_end (join "loop:" (string loop_count)) 10 " ")
+
+      (draw (set listener (string_to_list str) 0))
+
+      <- state
+    }
+
+    on_keypress = {
+      (if (not (is key_pressed void)) {
+        str = (string_pad_end (join "keypress:" (string key_pressed)) 10 " ")
+
+        (draw (set listener (string_to_list str) 0))
+      })
+
+      <- state
+    }
+
+    on_move = {
+      (if (not (is mouse_xy void)) {
+        str = (string_pad_end (join "move:" (string (get mouse_xy 0)) ":" (string (get mouse_xy 1))) 10 " ")
+
+        (draw (set listener (string_to_list str) 0))
+      })
+
+      <- state
+    }
+
+    on_click = {
+      <- (if (is (mouse_over listener mouse_xy) 1) {
+
+        str = (string_pad_end "click!" 10 " ")
+
+        (draw (set listener (string_to_list str) 0))
+
+        <- state
+      } {
+        <- void
+      })
+    }
+
+    arr = (list " " " " " " " " " " " " " " " " " " " ")
+
+    <- (list arr (list x y width height) (list on_loop on_keypress on_move on_click))
   })
 )
