@@ -92,9 +92,13 @@ run = { components state ->
     (draw (get components i))
   })
  
+  listeners = (map components { component index -> 
+    <- (get component 2)
+  })
+
   // event loop
   result = (use "./usables/event-loop.crumb" { 
-    <- (start components state)
+    <- (start listeners state)
   })
 
 

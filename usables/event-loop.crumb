@@ -1,12 +1,15 @@
+// starts the event loop
+// returns the final state
 start = { listeners state ->
   // trigger events
-  trigger = { event_pos_in_list listener ->
-    events = (get listener 2)
-    <- (if (is events void) {
+  trigger = { event_pos_in_list listener_index ->
+    listener = (get listeners listener_index)
+    // events = (get listener 2)
+    <- (if (is listener void) {
       <- void
     } {
 
-      fn = (get events event_pos_in_list)
+      fn = (get listener event_pos_in_list)
       <- (if (is fn void) {
         <- void
       } {
@@ -15,30 +18,32 @@ start = { listeners state ->
     })
   }
 
-  every_loop = { listener ->
-    <- (trigger 0 listener) // on_loop
+  // the listener list looks like:
+  // (list on_loop on_keypress on_move on_click)
+  every_loop = { listener_index ->
+    <- (trigger 0 listener_index) // on_loop
   }
 
-  every_keypress = { listener ->
-    <- (trigger 1 listener) // on_keypress
+  every_keypress = { listener_index ->
+    <- (trigger 1 listener_index) // on_keypress
   }
 
-  every_mouse_move = { listener mouse_xy ->
-    <- (trigger 2 listener) // on_move
+  every_mouse_move = { listener_index ->
+    <- (trigger 2 listener_index) // on_move
   }
 
-  every_mouse_click = { listener mouse_xy ->
-    <- (trigger 3 listener) // on_click
+  every_mouse_click = { listener_index ->
+    <- (trigger 3 listener_index) // on_click
   }
 
   // ** event loop
-  result = (until "stop" {state loop_count ->
+  result = (until "break" {state loop_count ->
     // get current event
     curr = (event)
 
     // loop "synthetic event"
     state = (reduce listeners { accum item index -> 
-      e = (every_loop (get listeners index))
+      e = (every_loop index)
       <- (if (is e void) {
         <- accum
       } {
@@ -58,7 +63,7 @@ start = { listeners state ->
           })
 
       <- (reduce listeners { accum item index -> 
-        e = (every_keypress (get listeners index))
+        e = (every_keypress index)
         <- (if (is e void) {
           <- accum
         } {
@@ -96,7 +101,7 @@ start = { listeners state ->
 
           // mouse move
           state = (reduce listeners { accum item index -> 
-            e = (every_mouse_move (get listeners index) mouse_xy)
+            e = (every_mouse_move index)
             <- (if (is e void) {
               <- accum
             } {
@@ -107,7 +112,7 @@ start = { listeners state ->
           // mouse click
           state = (if (or (is mouse_code 32) (is mouse_code 0)) {
             <- (reduce listeners { accum item index -> 
-              e = (every_mouse_click (get listeners index) mouse_xy)
+              e = (every_mouse_click index)
               <- (if (is e void) {
                 <- accum
               } {

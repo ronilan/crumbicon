@@ -14,10 +14,12 @@ components = (list
     x = (integer (divide (subtract (columns) width) 2))
 
     on_click = {
-      <- (if (is (mouse_over listener mouse_xy) 1) {
-        r = (subtract (get mouse_xy 1) (get (get listener 1) 1))
-        c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get (get listener 1) 0) )) 1) 2))
-        width = (integer (divide (get (get listener 1) 2) 2))
+      component = (get components listener_index)
+
+      <- (if (is (mouse_over component mouse_xy) 1) {
+        r = (subtract (get mouse_xy 1) (get (get component 1) 1))
+        c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get (get component 1) 0) )) 1) 2))
+        width = (integer (divide (get (get component 1) 2) 2))
 
         color = (get state 0)
 
@@ -33,7 +35,7 @@ components = (list
 
         })
 
-        (draw (set listener mapped 0))
+        (draw (set component mapped 0))
 
         <- (set state data 1)
       } {
@@ -55,11 +57,13 @@ components = (list
     x = (add (integer (divide (subtract (columns) width) 2)) 2)
 
     on_click = {
-      <- (if (is (mouse_over listener mouse_xy) 1) {
+      component = (get components listener_index)
+
+      <- (if (is (mouse_over component mouse_xy) 1) {
         // calculate color
-        r = (subtract (get mouse_xy 1) (get (get listener 1) 1))
-        c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get (get listener 1) 0) )) 1)
-        color = (add (add (multiply r (get (get listener 1) 2)) c) 16)
+        r = (subtract (get mouse_xy 1) (get (get component 1) 1))
+        c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get (get component 1) 0) )) 1)
+        color = (add (add (multiply r (get (get component 1) 2)) c) 16)
 
         // set the look of the color selected listener
         color_selected = (get components 4)
@@ -108,11 +112,13 @@ components = (list
     x = (subtract (integer (divide (subtract (columns) width) 2)) 19)
 
     on_click = {
-      <- (if (is (mouse_over listener mouse_xy) 1) {
+      component = (get components listener_index)
+
+      <- (if (is (mouse_over component mouse_xy) 1) {
         // calculate color
-        r = (subtract (get mouse_xy 1) (get (get listener 1) 1))
-        c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get (get listener 1) 0) )) 1)
-        color = (add (add (multiply r (get (get listener 1) 2)) c) 232)
+        r = (subtract (get mouse_xy 1) (get (get component 1) 1))
+        c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get (get component 1) 0) )) 1)
+        color = (add (add (multiply r (get (get component 1) 2)) c) 232)
 
         // set the look of the color selected listener
         color_selected = (get components 4)
@@ -161,7 +167,9 @@ components = (list
     x = (add (integer (divide (subtract (columns) width) 2)) 22)
 
     on_click = {
-      <- (if (is (mouse_over listener mouse_xy) 1) {
+      component = (get components listener_index)
+
+      <- (if (is (mouse_over component mouse_xy) 1) {
         // set the look of the color selected listener
         color_selected = (get components 4)
         color_selected_look = (get color_selected 0)
@@ -206,8 +214,10 @@ components = (list
     x = (add (integer (divide (subtract (columns) width) 2)) 23)
 
     on_click = {
-      <- (if (is (mouse_over listener mouse_xy) 1) {
-        state = "stop"
+      component = (get components listener_index)
+
+      <- (if (is (mouse_over component mouse_xy) 1) {
+        state = "break"
         <- state
       } {
         <- void
@@ -232,7 +242,9 @@ components = (list
     x = (subtract (integer (divide (subtract (columns) width) 2)) 24)
 
     on_click = {
-      <- (if (is (mouse_over listener mouse_xy) 1) {
+      component = (get components listener_index)
+
+      <- (if (is (mouse_over component mouse_xy) 1) {
         // redraw the canvas
         canvas = (get components 0)
         cells = (map (range (multiply 32 16)) { item index ->  <- ":" })
@@ -264,18 +276,22 @@ components = (list
     x = (subtract (columns) 20)
 
     on_loop = {
+      component = (get components listener_index)
+
       str = (string_pad_end (join "loop:" (string loop_count)) 10 " ")
 
-      (draw (set listener (string_to_list str) 0))
+      (draw (set component(string_to_list str) 0))
 
       <- state
     }
 
     on_keypress = {
       (if (not (is key_pressed void)) {
+        component = (get components listener_index)
+
         str = (string_pad_end (join "keypress:" (string key_pressed)) 10 " ")
 
-        (draw (set listener (string_to_list str) 0))
+        (draw (set component (string_to_list str) 0))
       })
 
       <- state
@@ -283,20 +299,24 @@ components = (list
 
     on_move = {
       (if (not (is mouse_xy void)) {
+        component = (get components listener_index)
+
         str = (string_pad_end (join "move:" (string (get mouse_xy 0)) ":" (string (get mouse_xy 1))) 10 " ")
 
-        (draw (set listener (string_to_list str) 0))
+        (draw (set component(string_to_list str) 0))
       })
 
       <- state
     }
 
     on_click = {
-      <- (if (is (mouse_over listener mouse_xy) 1) {
+      component = (get components listener_index)
+
+      <- (if (is (mouse_over component mouse_xy) 1) {
 
         str = (string_pad_end "click!" 10 " ")
 
-        (draw (set listener (string_to_list str) 0))
+        (draw (set component (string_to_list str) 0))
 
         <- state
       } {
