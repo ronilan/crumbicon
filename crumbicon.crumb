@@ -7,7 +7,7 @@ debug = { thing ->
 file = (if (is (length arguments) 2) {<- (get arguments 1)} {<- "favicon.svg"})
 
 data = (use "./usables/tui.crumb" "components.crumb" {
-  <- (run components state)
+  <- (run state components)
 })
 
 (use "export.crumb" {

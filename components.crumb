@@ -4,7 +4,6 @@ state = (list
 )
 
 components = (list
-
   // *** canvas
   ({
     y = 1
@@ -39,20 +38,20 @@ components = (list
 
         <- (set state data 1)
       } {
-        <- void
+        <- state
       })
     }
 
     cells = (map (range (multiply 32 16)) { item index ->  <- ":" })
 
-    <- (list cells(list x y width height) (list void void void on_click))
+    <- (list cells (list x y width height) (list void void void on_click))
   })
 
   // *** color_picker
   ({
-    y = (add 1 16 1)
     width = 36
     height = 6
+    y = (add 1 16 1)
     // center position on x and to right
     x = (add (integer (divide (subtract (columns) width) 2)) 2)
 
@@ -82,11 +81,11 @@ components = (list
         })
 
         (draw (set color_selected arr 0))
-   
+
         // update state
         <- (set state color 0)
       } {
-        <- void
+        <- state
       })
     }
 
@@ -141,7 +140,7 @@ components = (list
         // update state
         <- (set state color 0)
       } {
-        <- void
+        <- state
       })
     }
 
@@ -183,7 +182,7 @@ components = (list
         // update state
         <- (set state void 0)
       } {
-        <- void
+        <- state
       })
     }
 
@@ -220,7 +219,7 @@ components = (list
         state = "break"
         <- state
       } {
-        <- void
+        <- state
       })
     }
 
@@ -254,7 +253,7 @@ components = (list
         // reset canvas data in state
         <- (set state (map (range 256) { _ _ -> <- void}) 1)
       } {
-        <- void
+        <- state
       })
     }
 
@@ -286,10 +285,10 @@ components = (list
     }
 
     on_keypress = {
-      (if (not (is key_pressed void)) {
+      (if (not (is keypress_name void)) {
         component = (get components listener_index)
 
-        str = (string_pad_end (join "keypress:" (string key_pressed)) 10 " ")
+        str = (string_pad_end (join "keypress:" (string keypress_name)) 10 " ")
 
         (draw (set component (string_to_list str) 0))
       })
@@ -320,7 +319,7 @@ components = (list
 
         <- state
       } {
-        <- void
+        <- state
       })
     }
 

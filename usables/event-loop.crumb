@@ -1,39 +1,52 @@
+key_map = { sequence ->
+  kv_list = (list
+    "" "escape"
+    "[A" "up"
+    "[B" "down"
+    "[C" "right"
+    "[D" "left"
+    "[OP" "f1"
+    "[OQ" "f2"
+    "[OR" "f3"
+    "[OS" "f4"
+    "[15~" "f5"
+    "[17~" "f6"
+    "[18~" "f7"
+    "[19~" "f8"
+    "[20~" "f9"
+    "[21~" "f10"
+    "[24~" "f12"
+    "OP" "f1"
+    "OQ" "f2"
+    "OR" "f3"
+    "OS" "f4"
+  )
+
+  key = (if (greater_than (length sequence) 1) {
+      <- (get sequence 1 (length sequence))
+    } {
+      <- ""
+  })
+  pos = (find kv_list key)
+  value = (if (is pos void) {<-void} {<- (get kv_list (add pos 1))})
+
+  <- (if (is value void) {<- ""} {<- value})
+}
+
 // starts the event loop
 // returns the final state
-start = { listeners state ->
-  // trigger events
-  trigger = { event_pos_in_list listener_index ->
-    listener = (get listeners listener_index)
-    // events = (get listener 2)
-    <- (if (is listener void) {
-      <- void
-    } {
+start = { state listeners ->
 
-      fn = (get listener event_pos_in_list)
+  reduce_listeners = { event_index -> 
+    <- (reduce listeners { new_state listener listener_index -> 
+      fn = (get listener event_index)
       <- (if (is fn void) {
-        <- void
+        <- new_state
       } {
+        state = new_state
         <- (fn)
       })
-    })
-  }
-
-  // the listener list looks like:
-  // (list on_loop on_keypress on_move on_click)
-  every_loop = { listener_index ->
-    <- (trigger 0 listener_index) // on_loop
-  }
-
-  every_keypress = { listener_index ->
-    <- (trigger 1 listener_index) // on_keypress
-  }
-
-  every_mouse_move = { listener_index ->
-    <- (trigger 2 listener_index) // on_move
-  }
-
-  every_mouse_click = { listener_index ->
-    <- (trigger 3 listener_index) // on_click
+    } state) 
   }
 
   // ** event loop
@@ -42,35 +55,21 @@ start = { listeners state ->
     curr = (event)
 
     // loop "synthetic event"
-    state = (reduce listeners { accum item index -> 
-      e = (every_loop index)
-      <- (if (is e void) {
-        <- accum
-      } {
-        accum = e
-        <- accum
-      })
-    } state)
+    state = (reduce_listeners 0)
 
     // keypress
     state = (if (and (greater_than (length curr) 0) (less_than (length curr) 6)) {
-      key_pressed = (if (not (is (get curr 0) "\e")) {
-            <- curr
+      keypress_name = (if (not (is (get curr 0) "\e")) {
+            <- (if (is curr "\x7f") {
+              <- "delete"
+            } {
+              <- curr
+            })
           } {
-            // TODO process arrows and function keys (e.g "\e"[A)
-            //  (debug (get curr 1 (length curr)))
-            <- void
+            <- (key_map curr)
           })
 
-      <- (reduce listeners { accum item index -> 
-        e = (every_keypress index)
-        <- (if (is e void) {
-          <- accum
-        } {
-          accum = e
-          <- accum
-        })
-      } state) 
+      <- (reduce_listeners 1)
     } {<- state})
 
     // mouse
@@ -100,28 +99,14 @@ start = { listeners state ->
           )
 
           // mouse move
-          state = (reduce listeners { accum item index -> 
-            e = (every_mouse_move index)
-            <- (if (is e void) {
-              <- accum
-            } {
-              <- e
-            })
-          } state)
+          state = (reduce_listeners 2)
 
           // mouse click
+          // note: currently not acting on modifiers
+          // click with modifier is ignored
           state = (if (or (is mouse_code 32) (is mouse_code 0)) {
-            <- (reduce listeners { accum item index -> 
-              e = (every_mouse_click index)
-              <- (if (is e void) {
-                <- accum
-              } {
-                <- e
-              })
-            } state)
-          } {
-            <- state
-          })
+            <- (reduce_listeners 3)
+          } {<- state})
 
           <- state
         } {<- state})

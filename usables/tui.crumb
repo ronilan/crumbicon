@@ -1,4 +1,4 @@
-run = { components state ->
+run = { state components ->
   // ** utility function
   list_to_string = { arr -> <- (reduce arr {accum item _ -> <- (join accum (string item))} "")}
 
@@ -93,12 +93,14 @@ run = { components state ->
   })
  
   listeners = (map components { component index -> 
-    <- (get component 2)
+    // forgive user who does not supply an empty list of listeners
+    defined = (get component 2)
+    <- (if (is defined void) {<- (list void void void void) }{<- defined })
   })
 
   // event loop
   result = (use "./usables/event-loop.crumb" { 
-    <- (start listeners state)
+    <- (start state listeners)
   })
 
 
