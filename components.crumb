@@ -44,7 +44,7 @@ components = (list
 
     cells = (map (range (multiply 32 16)) { item index ->  <- ":" })
 
-    <- (list cells (list x y width height) (list void void void on_click))
+    <- (list cells (list x y width height) (list void void void void on_click))
   })
 
   // *** color_picker
@@ -99,7 +99,7 @@ components = (list
       ) 
     })
 
-    <- (list cells (list x y width height) (list void void void on_click))
+    <- (list cells (list x y width height) (list void void void void on_click))
   })
 
   // *** gray_picker
@@ -154,7 +154,7 @@ components = (list
       ) 
     })
 
-    <- (list cells (list x y width height) (list void void void on_click))
+    <- (list cells (list x y width height) (list void void void void on_click))
   })
 
   // *** empty_picker
@@ -188,7 +188,7 @@ components = (list
 
     arr = (list ":" ":" )
 
-    <- (list arr (list x y width height) (list void void void on_click))
+    <- (list arr (list x y width height) (list void void void void on_click))
   })
 
   // *** color_selected
@@ -229,7 +229,7 @@ components = (list
       "╚" "═" "═" "═" "═" "═" "═" "╝"
     )
 
-    <- (list arr (list x y width height) (list void void void on_click))
+    <- (list arr (list x y width height) (list void void void void on_click))
   })
 
   // *** button_clear
@@ -263,7 +263,7 @@ components = (list
       "╚" "═" "═" "═" "═" "═" "═" "╝"
     )
 
-    <- (list arr (list x y width height) (list void void void on_click))
+    <- (list arr (list x y width height) (list void void void void on_click))
   })
 
   // *** event-loop debug
@@ -325,6 +325,6 @@ components = (list
 
     arr = (list " " " " " " " " " " " " " " " " " " " ")
 
-    <- (list arr (list x y width height) (list on_loop on_keypress on_move on_click))
+    <- (list arr (list x y width height) (list void  on_loop on_keypress on_move on_click))
   })
 )

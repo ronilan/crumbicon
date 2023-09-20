@@ -37,39 +37,45 @@ key_map = { sequence ->
 // returns the final state
 start = { state listeners ->
 
-  reduce_listeners = { event_index -> 
-    <- (reduce listeners { new_state listener listener_index -> 
-      fn = (get listener event_index)
-      <- (if (is fn void) {
+  reduce_listeners = { event_index ->
+    <- (reduce listeners { new_state listener listener_index ->
+      <- (if (is listener void) {
         <- new_state
       } {
-        state = new_state
-        <- (fn)
+        fn = (get listener event_index)
+        <- (if (is fn void) {
+          <- new_state
+        } {
+          state = new_state
+          <- (fn)
+        })
       })
-    } state) 
+    } state)
   }
 
   // ** event loop
   result = (until "break" {state loop_count ->
+    // save state
+    prev_state = state
     // get current event
     curr = (event)
 
     // loop "synthetic event"
-    state = (reduce_listeners 0)
+    state = (reduce_listeners 1)
 
     // keypress
     state = (if (and (greater_than (length curr) 0) (less_than (length curr) 6)) {
       keypress_name = (if (not (is (get curr 0) "\e")) {
-            <- (if (is curr "\x7f") {
-              <- "delete"
-            } {
-              <- curr
-            })
-          } {
-            <- (key_map curr)
-          })
+        <- (if (is curr "\x7f") {
+          <- "delete"
+        } {
+          <- curr
+        })
+      } {
+        <- (key_map curr)
+      })
 
-      <- (reduce_listeners 1)
+      <- (reduce_listeners 2)
     } {<- state})
 
     // mouse
@@ -99,18 +105,26 @@ start = { state listeners ->
           )
 
           // mouse move
-          state = (reduce_listeners 2)
+          state = (reduce_listeners 3)
 
           // mouse click
           // note: currently not acting on modifiers
           // click with modifier is ignored
           state = (if (or (is mouse_code 32) (is mouse_code 0)) {
-            <- (reduce_listeners 3)
+            <- (reduce_listeners 4)
           } {<- state})
 
           <- state
         } {<- state})
     } {<- state})
+
+    // state "synthetic event"
+    state = (if (not (is prev_state state)) {
+      <- (reduce_listeners 0)
+    }{
+      <- state
+    })
+
     <- state
   } state)
 
