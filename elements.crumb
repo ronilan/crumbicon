@@ -1,0 +1,222 @@
+canvas = ({
+  props = (list
+    (integer (divide (subtract (columns) 32) 2)) // center position on x
+    1
+    (map (range 16) { _ _ -> 
+      <- (map (range 32) { _ _ -> <-  ":"})
+    })
+  )
+
+  on_state = {
+    props = (get canvas 0)
+    data = (get state 1)
+
+    mapped = (map (range 16) { _ row -> 
+      <- (map (range 32) { _ col -> 
+        halfcol = (integer (divide col 2))
+        <- (if (is (get data (add (multiply row 16) halfcol)) void) {
+          <- ":"
+        } {
+          <- (background (get data (add (multiply row 16) halfcol)) " ")
+        })
+      })
+    })
+
+    (draw (set props mapped 2))
+    <- state
+  }
+
+  on_click = {
+    props = (get canvas 0)
+
+    <- (if (is (mouse_over props mouse_xy) 1) {
+      r = (subtract (get mouse_xy 1) (get props 1))
+      c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) 2))
+      
+      data = (set (get state 1) (get state 0) (add (multiply r 16) c))
+
+      <- (set state data 1)
+    } {
+      <- state
+    })
+  }
+
+  <- (list props (list on_state void void void on_click))
+})
+
+color_picker = ({
+  props = (list
+    (add (integer (divide (subtract (columns) 36) 2)) 0) // center position on x and to right
+    (add 1 16 1)
+    (map (range 6) { item row -> 
+      <- (map (range 36) { item col -> <- (background (add (multiply row 36) col 16) " ")})
+    })
+  )
+
+  on_click = {
+      props = (get color_picker 0)
+
+    <- (if (is (mouse_over props mouse_xy) 1) {
+
+      // calculate color
+      r = (subtract (get mouse_xy 1) (get props 1))
+      c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
+      calculated = (add (add (multiply r 36) c) 16)
+
+      <- (set state calculated 0)
+    } {
+      <- state
+    })
+  }
+  <- (list props (list void void void void on_click))
+})
+
+gray_picker = ({
+  props = (list
+    (subtract (integer (divide (subtract (columns) 3) 2)) 20) // center position on x and left
+    (add 1 16 1)
+    (map (range 6) { item row -> 
+      <- (map (range 3) { item col -> <- (background (add (multiply row 3) col 232) " ")})
+    })
+  )
+
+  on_click = {
+      props = (get gray_picker 0)
+
+    <- (if (is (mouse_over props mouse_xy) 1) {
+      // calculate color
+      r = (subtract (get mouse_xy 1) (get props 1))
+      c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
+      calculated = (add (add (multiply r 3) c) 232)
+
+      // update state
+      <- (set state calculated 0)
+    } {
+      <- state
+    })
+  }
+  <- (list props (list void void void void on_click))
+})
+
+empty_picker = ({
+  props = (list
+    (add (integer (divide (subtract (columns) 1) 2)) 21) // center position on x and left
+    (add 1 16 6)
+    (list 
+      (list ":" ":")
+    )
+  )
+
+  on_click = {
+    props = (get empty_picker 0)
+
+    <- (if (is (mouse_over props mouse_xy) 1) {
+      <- (set state void 0)
+    } {
+      <- state
+    })
+  }
+
+  <- (list props (list void void void void on_click))
+})
+
+eight_picker = ({
+  props = (list
+    (add (integer (divide (subtract (columns) 1) 2)) 20) // center position on x and left
+    (add 1 16 1)
+    (map (range 4) { item row -> 
+      <- (map (range 4) { item col -> <- (background 
+      (rgb_to_ansi_8 (ansi_8_to_rgb (add (multiply row 4) col)))
+       " ")})
+    })
+  )
+
+  on_click = {
+    props = (get eight_picker 0)
+
+    <- (if (is (mouse_over props mouse_xy) 1) {
+
+      // calculate color
+      r = (subtract (get mouse_xy 1) (get props 1)) // (get (get component 1) 1) == y
+      c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) // (get (get component 1) 0) == x
+      calculated = (rgb_to_ansi_8 (ansi_8_to_rgb (add (multiply r 4) c) )) // (get (get component 1) 2)) === width
+
+      <- (set state calculated 0)
+    } {
+      <- state
+    })
+  }
+  <- (list props (list void void void void on_click))
+})
+
+color_selected = ({
+  props = (list 
+    (subtract (integer (divide (subtract (columns) 1) 2)) 17) // center position on x and left
+    1 
+    (list " " " " " " " " " " " " " " " " " " " " " " " " " " " " " " " ")
+  )
+
+  on_state = {
+    props = (get color_selected 0)
+
+    look = (if (is (get state 0) void) {
+      <- (get props 2)
+    }{
+      <- (background (get state 0) (get props 2))
+    })
+
+    (draw (set props look 2))
+    <-state
+  }
+
+  <- (list props (list on_state void void void void))
+})
+
+button_save = ({
+  props = (list
+    (add (integer (divide (subtract (columns) 8) 2)) 23)
+    1
+    (list
+      (list "╔" "═" "═" "═" "═" "═" "═" "╗")
+      (list "║" " " "S" "a" "v" "e" " " "║")
+      (list "╚" "═" "═" "═" "═" "═" "═" "╝")
+    )
+  )
+
+  on_click = {
+    props = (get button_save 0)
+    <- (if (is (mouse_over props mouse_xy) 1) {
+      <- "break"
+    } {
+      <- state
+    })
+  }
+
+  <- (list props (list void void void void on_click))
+})
+
+button_wipe = ({
+  props = (list
+    (subtract (integer (divide (subtract (columns) 8) 2)) 24)
+    1
+    (list
+      (list "╔" "═" "═" "═" "═" "═" "═" "╗")
+      (list "║" " " "W" "i" "p" "e" " " "║")
+      (list "╚" "═" "═" "═" "═" "═" "═" "╝")
+    )
+  )
+
+  on_click = {
+    props = (get button_wipe 0)
+
+    <- (if (is (mouse_over props mouse_xy) 1) {
+      // reset canvas data
+      <- (set state (map (range 256) { _ _ -> <- void}) 1)
+    } {
+      <- state
+    })
+  }
+  <- (list props (list void void void void on_click))
+})
+
+elements = (list canvas color_picker gray_picker empty_picker eight_picker color_selected button_save button_wipe)

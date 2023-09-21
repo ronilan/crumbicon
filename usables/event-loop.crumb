@@ -119,7 +119,10 @@ start = { state listeners ->
     } {<- state})
 
     // state "synthetic event"
-    state = (if (not (is prev_state state)) {
+    state = (if (and 
+      (not (is prev_state state))
+      (not (is "break" state))
+    ) {
       <- (reduce_listeners 0)
     }{
       <- state

@@ -2,17 +2,15 @@ string_to_list = { str -> <- (map (range (length str)) {index _ -> <- (get str i
 list_to_string = { arr -> <- (reduce arr {accum item _ -> <- (join accum (string item))} "")}
 
 string_reverse = { str -> 
-    <- (reduce (string_to_list str) { accum item index -> 
-      accum = (join item accum)
-      <- accum
-    } "")
+  <- (reduce (string_to_list str) { accum item index -> 
+    <- (join item accum)
+  } "")
 }
 
 string_pad_start = { str count padder -> 
   <- (if (greater_than (add (length str) 1) count){
-      <-str
-  }
-  {
+    <- str
+  } {
     <- (join (list_to_string (map (range (subtract count (length str))) {_ _ -> <- padder})) str)
   })
 }
@@ -37,10 +35,10 @@ dec_to_hex_char = { num ->
 
 base_10_to_other = { val base ->
   convert = { val res -> 
-    <-(if (greater_than val (subtract base 1)) {
+    <- (if (greater_than val (subtract base 1)) {
       res = (join res (dec_to_hex_char(remainder val base)))
       <- (convert (integer (divide val base)) res)
-    }{
+    } {
       res = (join res (dec_to_hex_char val) )
       <- res
     })
@@ -118,16 +116,16 @@ rgb_to_ansi_8 = { arr ->
 // ANSI 8 to RGB
 // 165 to [221, 0, 255] 
 ansi_8_to_rgb = { num ->
-  <- (if (is num 0) { <- (list 0 0 0) }{
-    <-(if (and (greater_than num 0) (less_than num 7)){
+  <- (if (is num 0) { <- (list 0 0 0) } {
+    <- (if (and (greater_than num 0) (less_than num 7)){
       <- (map (string_to_list (string_reverse(string_pad_start (base_10_to_2 num) 3 "0"))) {item _ -> <- (multiply (integer item) 127)})
-    }{
-      <-(if (is num 7) { <- (list 192 192 192)} {
-        <-(if (is num 8) { <- (list 127 127 127)} {
-          <-(if (and (greater_than num 8) (less_than num 16)){
+    } {
+      <- (if (is num 7) { <- (list 192 192 192)} {
+        <- (if (is num 8) { <- (list 127 127 127)} {
+          <- (if (and (greater_than num 8) (less_than num 16)){
             <- (map (string_to_list(string_reverse(string_pad_start (base_10_to_2 (subtract num 8)) 3 "0"))) {item _ -> <- (multiply (integer item) 255)})
-          }{
-            <- (if (is num 16) { <- (list 0 0 0) }{
+          } {
+            <- (if (is num 16) { <- (list 0 0 0) } {
               <- (if (and (greater_than num 16) (less_than num 232)) {
                 // the real ANSI palette is not equally spaced
                 // it goes 0, 95, 135, 175, 215, 255
@@ -135,7 +133,7 @@ ansi_8_to_rgb = { num ->
                 <- (map (string_to_list(string_pad_start (base_10_to_6 (subtract num 16)) 3 "0")) {item _ -> 
                   <- (integer (add (divide (multiply (integer item) 200) 5) 55))
                 })
-              }{
+              } {
                 <- (if (and (greater_than num 231) (less_than num 256)) {
                   // create a gray scale between the black and white (not including)
                   gray = (subtract(integer (divide (multiply (subtract num 231) 240) 24)) 2)
@@ -163,42 +161,65 @@ hex_to_ansi_8 = { str ->
 }
 
 ansi_from_color_definition = { color_definition ->
-    <- (if (is (type color_definition) "list") {
+  <- (if (is (type color_definition) "list") {
     <- (rgb_to_ansi_8 color_definition)
-  }{
+  } {
     <- (if (is (type color_definition) "string") {
       <- (if (is (get color_definition 0) "#") {
         <- (hex_to_ansi_8 (get color_definition 1 (length color_definition)))
       } {
         <- (hex_to_ansi_8 color_definition)
       })
-    }{
+    } {
       <- color_definition
     })
   })
 }
 
-color = { color_definition str ->
-  <- (if (is (type str) "string"){
-    <- (join
-      "\e[38;5;" (string (ansi_from_color_definition color_definition)) "m" str "\e[0;0m"
-    )
-  }{
-    <- str
+styling = { to_style open close ->
+  <- (if (is (type to_style) "string"){
+    <- (join open to_style close)
+  } {
+    <- (if (is (type to_style) "list"){
+      <- (map to_style {item index -> 
+        <- (styling item open close)
+      })
+    }{
+      <- ""
+    })
   })
 }
 
-background = { color_definition str ->
-  <- (if (is (type str) "string"){
-    <- (join
-      "\e[48;5;" (string (ansi_from_color_definition color_definition)) "m" str "\e[0;0m"
-    )
-  }{
-    <- str
+color = { color_definition to_color ->
+  <- (if (is (type to_color) "string"){
+    <- (join "\e[38;5;" (string (ansi_from_color_definition color_definition)) "m" to_color "\e[0;0m" )
+  } {
+    <- (if (is (type to_color) "list"){
+      <- (map to_color {item index -> 
+        <- (color color_definition item)
+      })
+    }{
+      <- ""
+    })
   })
 }
 
-bold = { str -> <- (join "\e[1m" str "\e[21m") }
-faint = { str -> <- (join "\e[2m" str "\e[22m") }
-inverse = { str -> <- (join "\e[7m" str "\e[27m") }
-underline = { str -> <- (join "\e[4m" str "\e[24m") }
+background = { color_definition to_color ->
+  <- (if (is (type to_color) "string"){
+    <- (join "\e[48;5;" (string (ansi_from_color_definition color_definition)) "m" to_color "\e[0;0m" )
+  } {
+    <- (if (is (type to_color) "list"){
+      <- (map to_color {item index -> 
+        <- (background color_definition item)
+      })
+    }{
+      <- ""
+    })
+  })
+}
+
+bold = { to_style -> <- (styling to_style "\e[1m" "\e[21m") }
+faint = { to_style -> <- (styling to_style "\e[2m" "\e[22m") }
+underline = { to_style -> <- (styling to_style "\e[4m" "\e[24m") }
+inverse = { to_style -> <- (styling to_style "\e[7m" "\e[27m") }
+

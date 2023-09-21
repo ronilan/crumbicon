@@ -6,12 +6,19 @@ debug = { thing ->
 
 file = (if (is (length arguments) 2) {<- (get arguments 1)} {<- "favicon.svg"})
 
-data = (use "./usables/tui.crumb" "components.crumb" {
-  <- (run state components)
+// initial state
+state = (list
+  void // paintbrush color
+  (map (range 256) { _ _ -> <- void}) // canvas data 
+)
+
+// state after user manipulation
+state = (use "./usables/colors.crumb" {
+  <- (use "./usables/tui.crumb" "./elements.crumb" {
+    <- (start state elements)
+  })
 })
 
 (use "export.crumb" {
-  (svg data (list 16 16 10) file)
+  (svg (get state 1) (list 16 16 10) file)
 })
-
-

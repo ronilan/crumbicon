@@ -1,4 +1,4 @@
-run = { state components ->
+ start = { state elements ->
   // ** utility function
   list_to_string = { arr -> <- (reduce arr {accum item _ -> <- (join accum (string item))} "")}
 
@@ -21,22 +21,34 @@ run = { state components ->
   }
 
   // mouse calculation
-  // component: a list describing a tui component
-  // mouse_xy: a list with current  x y mouse position
-  mouse_over = { component mouse_xy ->
+  // props: a list describing x y width and height of clickable area
+  // mouse_xy: a list with current x y mouse position
+  mouse_over = { props mouse_xy ->
     // deconstruct for readability
-    props = (get component 1)
-    
     x = (get props 0)
     y = (get props 1)
-    width = (get props 2)
-    height = (get props 3)
+    element_look = (get props 2)
+
+    // element look can be defined as a string, a list of strings or a list of lists.
+    // ignore any element that is not defined as a list of lists (cell grid) as the 
+    // strings may include style escape codes that alter their length
+    width = (if (not (is (type element_look) "list")) {
+      <- 0
+    } {
+      <- (if (not (is (type (get element_look 0)) "list")) {
+        <- 0
+      } {
+        <- (length (get element_look 0))
+      })
+    })
+
+    height = (length element_look)
 
     row = (integer (get mouse_xy 1))
     column = (integer (get mouse_xy 0))
 
     // by calculating the position of on the screen 
-    // decide if the mouse is over the component. 
+    // decide if the mouse is over the element. 
     <- (if (and
         (and 
           (greater_than column (subtract x 1))
@@ -50,67 +62,94 @@ run = { state components ->
     {
       <- 1
     } {
-      <- void
+      <- 0
     })
   }
 
-  // drawing components
-  draw = { component ->
+  // drawing elements
+  draw = { element ->
     // deconstruct for readability
-    props = (get component 1)
+    props = element
 
     // all calculations are on a screen where top left is 0, 0
     // escape codes are on a system based on 1, 1
     x = (add (get props 0) 1)
     y = (add (get props 1) 1)
-    width = (get props 2)
-    height = (get props 3)
 
-    component_look = (get component 0)
+    element_look = (get props 2)
 
+    // reset styling
     // jump to mouse_xy
-    (print (join "\e[" (string y) ";" (string x) "H"))
+    (print (join "\e[0;0m\e[" (string y) ";" (string x) "H"))
 
-    // print cell by cell
-    (loop height { j ->
-      (loop width { i ->
-        (print (get component_look (add (multiply j width) i) ))
+    // print string
+    (if (is (type element_look) "string") {
+      (print element_look)
+    } {
+      (if (is (type (get element_look 0)) "string") {
+        // print row by row
+        (loop (length element_look) { j ->
+          (print (get element_look j))
+          (print (join "\e[" (string (add y j 1)) ";" (string x) "H"))
+        })
+      } {
+        // print cell by cell
+        (loop (length element_look) { j ->
+          row = (get element_look j)
+          width = (length row)
+          (loop width { i ->
+            (print (get row i) )
+          })
+          // jump to position for each row
+          (print (join "\e[" (string (add y j 1)) ";" (string x) "H"))
+        })
       })
-      // jump to position for each row
-      (print (join "\e[" (string (add y j 1)) ";" (string x) "H"))
     })
   }
 
-  // ** setup
+  // set up: hide cursor and clear
+  (print "\e[?25l\e[2J\e[H")
 
-  // hide cursor
-  (print "\e[?25l")
-  // clear
-  (print "\e[2J\e[H")
+  listeners = (map elements { element index ->
+    <- (if (is element void) {
+      <- (list void void void void void)
+      } {
+        defined_listeners = (get element 1)
+        <- (if (is defined_listeners void) {
+          <- (list void void void void void) 
+        } {
+          <- defined_listeners
+        })
+    })
+  })
+
   // initial render
-  (loop (length components) { i -> 
-    (draw (get components i))
-  })
- 
-  listeners = (map components { component index -> 
-    // forgive user who does not supply an empty list of listeners
-    defined = (get component 2)
-    <- (if (is defined void) {<- (list void void void void void) }{<- defined })
-  })
+  (loop (length listeners) { index -> 
+    element = (get elements index)
+    listener = (get listeners index)
 
+    fn = (get (get listeners index) 0) 
+    (if (not (is fn void)) {
+      (fn)
+    } {
+      (if (not (is element void)) {
+        props = (get element 0)
+        (if (not (is props void)) {
+          (draw props)
+        })
+      })
+    })
+
+  })
 
   // event loop
   result = (use "./usables/event-loop.crumb" { 
     <- (start state listeners)
   })
 
+  // tear down: show cursor and clear
+  (print "\e[?25h\e[2J\e[H")
 
-  // ** tear down
-  // hide cursor
-  (print "\e[?25h")
-  // clear
-  (print "\e[2J\e[H")
-
-  <- (get result 1)
+  <- result
 }
 
