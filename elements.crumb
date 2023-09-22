@@ -2,15 +2,15 @@ dynamic_props = { element look ->
   <-(if (is (type state) "string" ){
     <- (list 0 0 "")
   }{
-    xy = (get state 2)
+    xy = (get state APP_XY)
     props = (get element 0)
 
     x = (add (get xy 0) (get props 0))
     y = (add (get xy 1) (get props 1))
 
     <- (if (or
-      (less_than (get (get state 2) 0) 0)
-      (less_than (get (get state 2) 1) 0)
+      (less_than (get (get state APP_XY) 0) 0)
+      (less_than (get (get state APP_XY) 1) 0)
     ) {
       <- (list x y "")
     } {
@@ -31,8 +31,8 @@ centered_modal = ({
 
   on_state = {
     (if (or
-      (less_than (get (get state 2) 0) 0)
-      (less_than (get (get state 2) 1) 0)
+      (less_than (get (get state APP_XY) 0) 0)
+      (less_than (get (get state APP_XY) 1) 0)
     ) {
       mapped = (map (range (subtract (rows) 0)) { _ index -> 
         <- (if (is index (integer (divide (rows) 2))) {
@@ -82,12 +82,12 @@ screen = ({
 
     curr = (list x y)
 
-    <- (if (is curr (get state 2)){
+    <- (if (is curr (get state APP_XY)){
       <- state
     } {
       (print "\e[2;0H\e[0J")
 
-      <- (set state (list x y) 2)
+      <- (set state (list x y) APP_XY)
     })
   }
 
@@ -117,7 +117,7 @@ canvas = ({
   )
 
   on_state = {
-    data = (get state 1)
+    data = (get state DATA)
 
     mapped = (map (range 16) { _ row -> 
       <- (map (range 32) { _ col -> 
@@ -141,9 +141,9 @@ canvas = ({
       r = (subtract (get mouse_xy 1) (get props 1))
       c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) 2))
       
-      data = (set (get state 1) (get state 0) (add (multiply r 16) c))
+      data = (set (get state DATA) (get state PAINTBRUSH) (add (multiply r 16) c))
 
-      <- (set state data 1)
+      <- (set state data DATA)
     } {
       <- state
     })
@@ -175,11 +175,11 @@ color_picker = ({
       c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
       calculated = (add (add (multiply r 12) c) 16)
 
-      pl = (get (get state 3) 0)
-      palette = (set (get (get state 3) 1) calculated pl)
-      state = (set state (list pl palette) 3)
+      pl = (get (get state PALETTE) 0)
+      palette = (set (get (get state PALETTE) 1) calculated pl)
+      state = (set state (list pl palette) PALETTE)
 
-      <- (set state calculated 0)
+      <- (set state calculated PAINTBRUSH)
     } {
       <- state
     })
@@ -210,11 +210,11 @@ gray_picker = ({
       c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
       calculated = (add (add (multiply r 2) c) 232)
 
-      pl = (get (get state 3) 0)
-      palette = (set (get (get state 3) 1) calculated pl)
-      state = (set state (list pl palette) 3)
+      pl = (get (get state PALETTE) 0)
+      palette = (set (get (get state PALETTE) 1) calculated pl)
+      state = (set state (list pl palette) PALETTE)
 
-      <- (set state calculated 0)
+      <- (set state calculated PAINTBRUSH)
     } {
       <- state
     })
@@ -249,11 +249,11 @@ sixteen_picker = ({
       c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) // (get (get component 1) 0) == x
       calculated = (rgb_to_ansi_8 (ansi_8_to_rgb (add (multiply r 1) c) )) 
 
-      pl = (get (get state 3) 0)
-      palette = (set (get (get state 3) 1) calculated pl)
-      state = (set state (list pl palette) 3)
+      pl = (get (get state PALETTE) 0)
+      palette = (set (get (get state PALETTE) 1) calculated pl)
+      state = (set state (list pl palette) PALETTE)
 
-      <- (set state calculated 0)
+      <- (set state calculated PAINTBRUSH)
     } {
       <- state
     })
@@ -280,11 +280,11 @@ empty_picker = ({
 
     <- (if (is (mouse_over props mouse_xy) 1) {
 
-      pl = (get (get state 3) 0)
-      palette = (set (get (get state 3) 1) void pl)
-      state = (set state (list pl palette) 3)
+      pl = (get (get state PALETTE) 0)
+      palette = (set (get (get state PALETTE) 1) void pl)
+      state = (set state (list pl palette) PALETTE)
 
-      <- (set state void 0)
+      <- (set state void PAINTBRUSH)
     } {
       <- state
     })
@@ -301,10 +301,10 @@ color_selected = ({
   )
 
   on_state = {
-    mapped = (if (is (get state 0) void) {
+    mapped = (if (is (get state PAINTBRUSH) void) {
       <- (get (get color_selected 0) 2)
     }{
-      <- (background (get state 0) (get (get color_selected 0) 2))
+      <- (background (get state PAINTBRUSH) (get (get color_selected 0) 2))
     })
 
     (draw (dynamic_props color_selected mapped))
@@ -326,9 +326,9 @@ palette = ({
   )
 
   on_state = {
-    pb = (get state 0)
-    pl = (get (get state 3) 0)
-    pll = (get (get state 3) 1)
+    pb = (get state PAINTBRUSH)
+    pl = (get (get state PALETTE) 0)
+    pll = (get (get state PALETTE) 1)
 
     look = (get (get palette 0) 2)
 
@@ -371,13 +371,13 @@ palette = ({
       selected = (if (or (is (remainder c 4) 1) (is (remainder c 4) 2)) {
         <- (integer (divide c 4))
       } {
-        <- (get (get state 3) 0)
+        <- (get (get state PALETTE) 0)
       })
-      state = (set state (set (get state 3) selected 0) 3)
+      state = (set state (set (get state PALETTE) selected 0) PALETTE)
 
-      pll = (get (get state 3) 1)
+      pll = (get (get state PALETTE) 1)
       pb = (get pll selected)
-      state = (set state pb 0)
+      state = (set state pb PAINTBRUSH)
 
       <- state
     } {
@@ -438,7 +438,7 @@ button_wipe = ({
 
     <- (if (is (mouse_over props mouse_xy) 1) {
       // reset canvas data
-      <- (set state (map (range 256) { _ _ -> <- void}) 1)
+      <- (set state (map (range 256) { _ _ -> <- void}) DATA)
     } {
       <- state
     })

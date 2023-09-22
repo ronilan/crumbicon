@@ -59,6 +59,11 @@ state = (use "./usables/colors.crumb" {
     x = (integer (divide (subtract (columns) app_width) 2)) // center position on x
     y = (integer (divide (subtract (rows) app_height) 2)) // center position on y
 
+    PAINTBRUSH = 0
+    DATA = 1
+    APP_XY = 2
+    PALETTE = 3
+
     // initial state
     state = (list
       void // paintbrush color
