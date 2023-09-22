@@ -1,8 +1,9 @@
+// utility
+
 // split a string on a single char separator
 split = {in sep ->
   // convert to list of chars
   arr = (map (range (length in)) {index _ -> <- (get in index)})
-
   // reduce list of chars to list of words
   <- (if (is sep "") {<- arr} {
     <- (reduce arr {acc char _ ->
@@ -19,41 +20,39 @@ split = {in sep ->
   })
 }
 
-debug = { thing ->
-  (print "\e[24;1H")
-  (print thing)
-  (print "             ")
+data_from_file = { text start_needle end_needle alt ->
+  <- (if (is text void) {
+    <- alt
+  } {
+    start = (find text start_needle)
+    end = (find text end_needle)
+    <- (if (or (is start void) (is end void)) {
+      <- alt
+    } {
+      <- (if (is (type start) integer) {
+        <- alt
+      } {
+        start = (add start (add (length start_needle) 1))
+        arr = (map (split (get text start end) ":") {item _ -> 
+          <- (if (is item "void") {
+            <- void
+          } {
+            <- (integer item)
+          })
+        })
+        <- arr
+      })
+    })
+  })
 }
 
 file = (if (is (length arguments) 2) {<- (get arguments 1)} {<- "favicon.svg"})
 text = (read_file file)
 
-empty = (map (range 256) { _ _ -> <- void})
-data = (if (is text void) {
-  <- empty
-} {
-  start = (find text "<!-- crumbicon")
-  end = (find text "crumbicon -->")
-  <- (if (or (is start void) (is end void)) {
-    <- empty
-  } {
-    <- (if (is (type start) integer) {
-      <- empty
-    } {
-      start = (add start 15)
-      arr = (map (split (get text start end) ":") {item _ -> 
-        <- (if (is item "void") {
-          <- void
-        } {
-          <- (integer item)
-        })
-      })
-      <- arr
-    })
-  } )
-})
+crumbicon-data = (data_from_file text "<!-- crumbicon-data" "crumbicon-data -->" (map (range 256) { _ _ -> <- void}))
+crumbicon-palette = (data_from_file text "<!-- crumbicon-palette" "crumbicon-palette -->" (map (range 256) { _ _ -> <- void}))
 
-// state after user manipulation
+//state after user manipulation
 state = (use "./usables/colors.crumb" {
   <- (use "./usables/tui.crumb" "./elements.crumb" {
 
@@ -63,8 +62,9 @@ state = (use "./usables/colors.crumb" {
     // initial state
     state = (list
       void // paintbrush color
-      data // canvas data
+      crumbicon-data // canvas data
       (list x y) // screen anchor
+      (list 0 crumbicon-palette) // palette
     )
 
     <- (start state elements)
@@ -72,5 +72,5 @@ state = (use "./usables/colors.crumb" {
 })
 
 (use "export.crumb" {
-  (svg (get state 1) (list 16 16 10) file)
+  (svg (get state 1) (list 16 16 10) (get (get state 3) 1) file)
 })

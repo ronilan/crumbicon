@@ -128,8 +128,8 @@ canvas = ({
 
 color_picker = ({
   props = (list
-    3 //(add (integer (divide (subtract (columns) 36) 2)) 0) // center position on x and to right
-    2 //(add (integer (divide (subtract (rows) 16) 2)) 11)// center position on y and down
+    3
+    2
     (map (range 18) { item row -> 
       <- (map (range 12) { item col -> <- (background (add (multiply row 12) col 16) " ")})
     })
@@ -141,13 +141,17 @@ color_picker = ({
   }
 
   on_click = {
-      props = (dynamic_props color_picker void)
+    props = (dynamic_props color_picker void)
 
     <- (if (is (mouse_over props mouse_xy) 1) {
       // calculate color
       r = (subtract (get mouse_xy 1) (get props 1))
       c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
       calculated = (add (add (multiply r 12) c) 16)
+
+      pl = (get (get state 3) 0)
+      palette = (set (get (get state 3) 1) calculated pl)
+      state = (set state (list pl palette) 3)
 
       <- (set state calculated 0)
     } {
@@ -180,12 +184,16 @@ gray_picker = ({
       c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
       calculated = (add (add (multiply r 2) c) 232)
 
-      // update state
+      pl = (get (get state 3) 0)
+      palette = (set (get (get state 3) 1) calculated pl)
+      state = (set state (list pl palette) 3)
+
       <- (set state calculated 0)
     } {
       <- state
     })
   }
+
   <- (list props (list on_state void void void on_click))
 })
 
@@ -215,6 +223,10 @@ sixteen_picker = ({
       c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) // (get (get component 1) 0) == x
       calculated = (rgb_to_ansi_8 (ansi_8_to_rgb (add (multiply r 1) c) )) 
 
+      pl = (get (get state 3) 0)
+      palette = (set (get (get state 3) 1) calculated pl)
+      state = (set state (list pl palette) 3)
+
       <- (set state calculated 0)
     } {
       <- state
@@ -241,6 +253,11 @@ empty_picker = ({
       props = (dynamic_props empty_picker void)
 
     <- (if (is (mouse_over props mouse_xy) 1) {
+
+      pl = (get (get state 3) 0)
+      palette = (set (get (get state 3) 1) void pl)
+      state = (set state (list pl palette) 3)
+
       <- (set state void 0)
     } {
       <- state
@@ -269,6 +286,80 @@ color_selected = ({
   }
 
   <- (list props (list on_state void void void void))
+})
+
+palette = ({
+  props = (list
+    22
+    19 
+    (list
+      (map (range 32) {_ index -> 
+        <- (if (or (is (remainder index 4) 1) (is (remainder index 4) 2)) {<- ":"} {<- " "})
+      })
+    )
+  )
+
+  on_state = {
+    pb = (get state 0)
+    pl = (get (get state 3) 0)
+    pll = (get (get state 3) 1)
+
+    look = (get (get palette 0) 2)
+
+    mapped = (map look { item row ->
+        <- (map item { item col ->col
+          <- (if (or (is (remainder col 4) 1) (is (remainder col 4) 2)) {
+            coloring =  (get pll (integer (divide col 4)))
+            active = (or 
+              (is (add (multiply pl 4) 2) col)
+              (is (add (multiply pl 4) 1) col)
+            )
+
+            <- (if (is (type coloring) "integer") {
+              <- (background coloring (if (is active 1) {<- "+"} {<- " "} ))
+            } {
+              <- (if (is active 1) {<- "+"} {<- item} )
+            })
+
+            <- item
+          } {
+            <- " "
+          })
+
+        })
+      })
+
+
+    (draw (dynamic_props palette mapped))
+    <- state
+  }
+
+  on_click = {
+    props = (dynamic_props palette void)
+
+    <- (if (is (mouse_over props mouse_xy) 1) {
+      // calculate color
+      r = (subtract (get mouse_xy 1) (get props 1))
+      c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
+      
+      selected = (if (or (is (remainder c 4) 1) (is (remainder c 4) 2)) {
+        <- (integer (divide c 4))
+      } {
+        <- (get (get state 3) 0)
+      })
+      state = (set state (set (get state 3) selected 0) 3)
+
+      pll = (get (get state 3) 1)
+      pb = (get pll selected)
+      state = (set state pb 0)
+
+      <- state
+    } {
+      <- state
+    })
+  }
+
+  <- (list props (list on_state void void void on_click))
 })
 
 button_save = ({
@@ -329,4 +420,4 @@ button_wipe = ({
   <- (list props (list on_state void void void on_click))
 })
 
-elements = (list screen title canvas color_picker gray_picker empty_picker sixteen_picker color_selected button_save button_wipe)
+elements = (list screen title canvas color_picker gray_picker empty_picker sixteen_picker palette color_selected button_save button_wipe)

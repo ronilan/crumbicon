@@ -1,5 +1,14 @@
-svg = { data props target ->
+svg = { data props palette target ->
 
+  data_to_string = { data ->
+    <- (reduce data { accum item index -> 
+      <- (join accum ":" (if (is item void) {
+        <- "void"
+      } {
+        <- (string item) 
+      })) 
+    } "")
+  }
   (print "Exporting" target "\n")
 
   rows = (get props 0)
@@ -32,17 +41,14 @@ svg = { data props target ->
           "\" />\n"
           )
       })
-    }) { accum item index -> <- (join accum item) } "")
-
-  saved = (reduce data { accum item index -> 
-    <- (join accum ":" (if (is item void) {
-      <- "void"
-    } {
-      <- (string item) 
-    })) 
+    }) { accum item index -> 
+      <- (join accum item) 
   } "")
 
-  str = (join open "\n" rendered "\n" close "\n" "<!-- crumbicon" saved "crumbicon -->")
+  saved_data = (data_to_string data)
+  saved_palette = (data_to_string palette)
+
+  str = (join open "\n" rendered "\n" close "\n" "<!-- crumbicon-data" saved_data "crumbicon-data --><!-- crumbicon-palette" saved_palette "crumbicon-palette -->")
   
   (write_file target str)
 
