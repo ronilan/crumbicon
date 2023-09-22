@@ -4,12 +4,21 @@ dynamic_props = { element look ->
   }{
     xy = (get state 2)
     props = (get element 0)
+
     x = (add (get xy 0) (get props 0))
     y = (add (get xy 1) (get props 1))
-    <- (if (is look void) {
-      <- (list x y (get (get element 0) 2)) 
+
+    <- (if (or
+      (less_than (get (get state 2) 0) 0)
+      (less_than (get (get state 2) 1) 0)
+    ) {
+      <- (list x y "")
     } {
-      <- (list x y look)
+      <- (if (is look void) {
+        <- (list x y (get (get element 0) 2)) 
+      } {
+        <- (list x y look)
+      })
     })
   })
 }
@@ -17,10 +26,38 @@ dynamic_props = { element look ->
 app_width = 80
 app_height = 24
 
-message = ({
+centered_modal = ({
   props = (list 0 0 "")
+
   on_state = {
-    (draw (dynamic_props screen void))
+    (if (or
+      (less_than (get (get state 2) 0) 0)
+      (less_than (get (get state 2) 1) 0)
+    ) {
+      mapped = (map (range (subtract (rows) 0)) { _ index -> 
+        <- (if (is index (integer (divide (rows) 2))) {
+          r = (map (range (subtract (columns) 0)) { _ _ ->
+            <- " "
+          })
+          point = (subtract (integer (divide (columns) 2)) 12)
+          point = (if (less_than point 0) {
+            <- 0
+          }{
+            <- point
+          })
+          <- (set r "Enlarge Terminal Window" point)
+        } {
+          <- (map (range (subtract (columns) 0)) { _ _ ->
+            <- " "
+          })
+        })
+      })
+
+      (draw (list 0 0 mapped))
+    } {
+      (draw (list 0 0 ""))
+    })
+
     <- state
   }
 
@@ -49,17 +86,6 @@ screen = ({
       <- state
     } {
       (print "\e[2;0H\e[0J")
-      x = (if (less_than x 0) {
-        <- 0
-      } {
-        <- x
-      })
-
-      y = (if (less_than y 0) {
-        <- 0
-      } {
-        <- y
-      })
 
       <- (set state (list x y) 2)
     })
@@ -420,4 +446,4 @@ button_wipe = ({
   <- (list props (list on_state void void void on_click))
 })
 
-elements = (list screen title canvas color_picker gray_picker empty_picker sixteen_picker palette color_selected button_save button_wipe)
+elements = (list screen centered_modal title canvas color_picker gray_picker empty_picker sixteen_picker palette color_selected button_save button_wipe )

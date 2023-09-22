@@ -57,7 +57,7 @@ state = (use "./usables/colors.crumb" {
   <- (use "./usables/tui.crumb" "./elements.crumb" {
 
     x = (integer (divide (subtract (columns) app_width) 2)) // center position on x
-    y = (integer (divide (subtract (rows) app_height) 2))// center position on y
+    y = (integer (divide (subtract (rows) app_height) 2)) // center position on y
 
     // initial state
     state = (list
@@ -72,5 +72,5 @@ state = (use "./usables/colors.crumb" {
 })
 
 (use "export.crumb" {
-  (svg (get state 1) (list 16 16 10) (get (get state 3) 1) file)
+  (svg (get state 1) (list 16 16 30) (get (get state 3) 1) file)
 })
