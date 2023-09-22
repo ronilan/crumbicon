@@ -42,7 +42,7 @@ svg = { data props target ->
     })) 
   } "")
 
-  str = (join open "\n" rendered "\n" close "\n" "<!-- crumbicon:" saved "-->")
+  str = (join open "\n" rendered "\n" close "\n" "<!-- crumbicon" saved "crumbicon -->")
   
   (write_file target str)
 

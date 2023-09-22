@@ -25,3 +25,5 @@ node_modules/
 # in case
 .npmrc
 
+# do not include Crumb interpreter
+crumb
