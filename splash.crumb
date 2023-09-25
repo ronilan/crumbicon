@@ -1,0 +1,34 @@
+message_mapped = { text -> 
+  <- (map (range (subtract (rows) 0)) { _ index -> 
+    <- (if (is index (integer (divide (rows) 2))) {
+      r = (map (range (subtract (columns) 0)) { _ _ ->
+        <- " "
+      })
+      point = (subtract (integer (divide (columns) 2)) (integer (divide (length text) 2 ) ))
+      point = (if (less_than point 0) {
+        <- 0
+      }{
+        <- point
+      })
+      <- (set r text point)
+    } {
+      <- (map (range (subtract (columns) 0)) { _ _ ->
+        <- "  "
+      })
+    })
+  })
+}
+
+splash_screen = (list 
+  (subtract (integer (divide (columns) 2)) (integer (divide 53 2 )))
+  (subtract (integer (divide (rows) 2)) (integer (divide 7 2) ))
+  (list
+    (bold (color 1 "   ___                     _     _                 "))
+    (bold(color 2 "  / __\\ __ _   _ _ __ ___ | |__ (_) ___ ___  _ __  "))
+    (bold(color 3 " / / | '__| | | | '_ ` _ \\| '_ \\| |/ __/ _ \\| '_ \\ "))
+    (bold(color 4 "/ /__| |  | |_| | | | | | | |_) | | (_| (_) | | | |"))
+    (bold(color 5 "\\____/_|   \\__,_|_| |_| |_|_.__/|_|\\___\\___/|_| |_|"))
+                  ""
+                  "                    An icon editor for the terminal"
+  )
+)

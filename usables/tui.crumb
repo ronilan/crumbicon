@@ -1,4 +1,55 @@
- start = { state elements ->
+// drawing elements
+draw = { element ->
+  // deconstruct for readability
+  props = element
+
+  // all calculations are on a screen where top left is 0, 0
+  // escape codes are on a system based on 1, 1
+  x = (add (get props 0) 1)
+  y = (add (get props 1) 1)
+
+  element_look = (get props 2)
+
+  // reset styling
+  // jump to mouse_xy
+  (print (join "\e[0;0m\e[" (string y) ";" (string x) "H"))
+
+  // print string
+  (if (is (type element_look) "string") {
+    (print element_look)
+  } {
+    (if (is (type (get element_look 0)) "string") {
+      // print row by row
+      (loop (length element_look) { j ->
+        (print (get element_look j))
+        (print (join "\e[" (string (add y j 1)) ";" (string x) "H"))
+      })
+    } {
+      // print cell by cell
+      (loop (length element_look) { j ->
+        row = (get element_look j)
+        width = (length row)
+        (loop width { i ->
+          (print (get row i) )
+        })
+        // jump to position for each row
+        (print (join "\e[" (string (add y j 1)) ";" (string x) "H"))
+      })
+    })
+  })
+}
+
+set_up = {
+  // set up: hide cursor and clear
+  (print "\e[?25l\e[2J\e[H")
+}
+
+tear_down = {
+  // tear down: show cursor and clear
+  (print "\e[?25h\e[2J\e[H")
+}
+
+start = { state elements ->
   // ** utility function
   list_to_string = { arr -> <- (reduce arr {accum item _ -> <- (join accum (string item))} "")}
 
@@ -66,49 +117,7 @@
     })
   }
 
-  // drawing elements
-  draw = { element ->
-    // deconstruct for readability
-    props = element
-
-    // all calculations are on a screen where top left is 0, 0
-    // escape codes are on a system based on 1, 1
-    x = (add (get props 0) 1)
-    y = (add (get props 1) 1)
-
-    element_look = (get props 2)
-
-    // reset styling
-    // jump to mouse_xy
-    (print (join "\e[0;0m\e[" (string y) ";" (string x) "H"))
-
-    // print string
-    (if (is (type element_look) "string") {
-      (print element_look)
-    } {
-      (if (is (type (get element_look 0)) "string") {
-        // print row by row
-        (loop (length element_look) { j ->
-          (print (get element_look j))
-          (print (join "\e[" (string (add y j 1)) ";" (string x) "H"))
-        })
-      } {
-        // print cell by cell
-        (loop (length element_look) { j ->
-          row = (get element_look j)
-          width = (length row)
-          (loop width { i ->
-            (print (get row i) )
-          })
-          // jump to position for each row
-          (print (join "\e[" (string (add y j 1)) ";" (string x) "H"))
-        })
-      })
-    })
-  }
-
-  // set up: hide cursor and clear
-  (print "\e[?25l\e[2J\e[H")
+  (set_up)
 
   listeners = (map elements { element index ->
     <- (if (is element void) {
@@ -127,7 +136,8 @@
   (loop (length listeners) { index -> 
     element = (get elements index)
     listener = (get listeners index)
-
+  
+    loop_count = 0 // listeners may use loop_count
     fn = (get (get listeners index) 0) 
     (if (not (is fn void)) {
       (fn)
@@ -147,8 +157,7 @@
     <- (start state listeners)
   })
 
-  // tear down: show cursor and clear
-  (print "\e[?25h\e[2J\e[H")
+  (tear_down)
 
   <- result
 }

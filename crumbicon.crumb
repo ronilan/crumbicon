@@ -46,36 +46,43 @@ data_from_file = { text start_needle end_needle alt ->
   })
 }
 
-file = (if (is (length arguments) 2) {<- (get arguments 1)} {<- "favicon.svg"})
-text = (read_file file)
+(use "./usables/colors.crumb" {
 
-crumbicon-data = (data_from_file text "<!-- crumbicon-data" "crumbicon-data -->" (map (range 256) { _ _ -> <- void}))
-crumbicon-palette = (data_from_file text "<!-- crumbicon-palette" "crumbicon-palette -->" (map (range 256) { _ _ -> <- void}))
+  file = (if (is (length arguments) 2) {<- (get arguments 1)} {<- "favicon.svg"})
 
-//state after user manipulation
-state = (use "./usables/colors.crumb" {
-  <- (use "./usables/tui.crumb" "./elements.crumb" {
+  from_file = (use "import.crumb" "./usables/tui.crumb" "./splash.crumb" {
+
+    (set_up)
+    (draw splash_screen)
+    (wait 1)
+
+    <- (crumbicon file)
+  })
+
+  // state access constants
+  PAINTBRUSH = 0
+  DATA = 1
+  APP_XY = 2
+  PALETTE = 3
+
+  //state after user manipulation
+  state = (use "./usables/tui.crumb" "./elements.crumb" "./splash.crumb" {
 
     x = (integer (divide (subtract (columns) app_width) 2)) // center position on x
     y = (integer (divide (subtract (rows) app_height) 2)) // center position on y
 
-    PAINTBRUSH = 0
-    DATA = 1
-    APP_XY = 2
-    PALETTE = 3
-
     // initial state
     state = (list
       void // paintbrush color
-      crumbicon-data // canvas data
+      (get from_file 0) // canvas data
       (list x y) // screen anchor
-      (list 0 crumbicon-palette) // palette
+      (list 0 (get from_file 1)) // palette
     )
 
     <- (start state elements)
   })
-})
 
-(use "export.crumb" {
-  (svg (get state 1) (list 16 16 30) (get (get state 3) 1) file)
+  (use "export.crumb" "./usables/tui.crumb" "./splash.crumb" {
+    (svg (get state DATA) (list 16 16 30) (get (get state PALETTE) 1) file)
+  })
 })

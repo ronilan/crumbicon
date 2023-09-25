@@ -9,38 +9,39 @@ svg = { data props palette target ->
       })) 
     } "")
   }
-  (print "Exporting" target "\n")
 
-  rows = (get props 0)
-  columns = (get props 1)
+  (set_up)
+  (draw (list 0 0 (color 9 (message_mapped (join "Exporting " target "\n")))))
+
+  num_rows = (get props 0)
+  num_columns = (get props 1)
   pixel_width = (get props 2)
+
 
   open = (join 
     "<svg version=\"1.1\" baseProfile=\"full\"  width=\""
-    (string(multiply columns pixel_width))
+    (string(multiply num_columns pixel_width))
     "\" height=\""
-    (string(multiply rows pixel_width))
+    (string(multiply num_rows pixel_width))
     "\" xmlns=\"http://www.w3.org/2000/svg\">"
   )
   close = "</svg>"
 
   rendered = (reduce  
     (map data { item index ->
-      <- (use "./usables/colors.crumb" {
-        <- (join 
-          "<rect x=\""
-          (string (multiply (remainder index columns) pixel_width))
-          "\" y=\""
-          (string (multiply (integer (divide index columns)) pixel_width))
-          "\" width=\""
-          (string pixel_width)
-          "\" height=\""
-          (string pixel_width)
-          "\" fill=\"" 
-          (if (is item void) {<- "none"} {<- (join "#" (ansi_8_to_hex item))})
-          "\" />\n"
-          )
-      })
+      <- (join 
+        "<rect x=\""
+        (string (multiply (remainder index num_columns) pixel_width))
+        "\" y=\""
+        (string (multiply (integer (divide index num_columns)) pixel_width))
+        "\" width=\""
+        (string pixel_width)
+        "\" height=\""
+        (string pixel_width)
+        "\" fill=\"" 
+        (if (is item void) {<- "none"} {<- (join "#" (ansi_8_to_hex item))})
+        "\" />\n"
+        )
     }) { accum item index -> 
       <- (join accum item) 
   } "")
@@ -49,8 +50,10 @@ svg = { data props palette target ->
   saved_palette = (data_to_string palette)
 
   str = (join open "\n" rendered "\n" close "\n" "<!-- crumbicon-data" saved_data "crumbicon-data --><!-- crumbicon-palette" saved_palette "crumbicon-palette -->")
-  
+
   (write_file target str)
 
-  (print target "saved\n")
+  (draw (list 0 0 (color 10 (message_mapped (join "Saved " target "\n")))))
+  (wait 0.5)
+  (tear_down)
 }

@@ -91,7 +91,7 @@ screen = ({
     })
   }
 
-  <- (list props (list on_state on_loop void void void void))
+  <- (list props (list on_state on_loop void void void))
 })
 
 title = ({
@@ -104,7 +104,7 @@ title = ({
     <- state
   }
 
-  <- (list void (list on_state void void void void void))
+  <- (list void (list on_state void void void void))
 })
 
 canvas = ({
@@ -408,7 +408,7 @@ button_save = ({
     props = (dynamic_props button_save void)
 
     <- (if (is (mouse_over props mouse_xy) 1) {
-      <- "break"
+      <- void
     } {
       <- state
     })
