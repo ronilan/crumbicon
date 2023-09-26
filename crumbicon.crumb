@@ -17,6 +17,7 @@
     DATA = 2
     PALETTE = 3
     SIZE = 4
+    SAVE = 5
 
     //state after user manipulation
     state = (use "./usables/tui.crumb" "./src/elements.crumb" "./src/splash.crumb" {
@@ -31,13 +32,16 @@
         (get from_file 0) // canvas data
         (list 0 (get from_file 1)) // palette
         (get from_file 2) // size
+        1 // save or abort?
       )
 
       <- (start state elements)
     })
 
-    (use "./src/export.crumb" "./usables/tui.crumb" "./src/splash.crumb" {
-      (svg (get state DATA) (list 16 16 30) (get (get state PALETTE) 1) file_name)
+    (if (is (get state SAVE) 1) {
+      (use "./src/export.crumb" "./usables/tui.crumb" "./src/splash.crumb" {
+        (svg (get state DATA) (list 16 16 30) (get (get state PALETTE) 1) file_name)
+      })
     })
   })
 

@@ -68,8 +68,8 @@ screen = ({
   props = (list 
     0
     0
-    "+"
-    // (reduce (range 80) {accum _ _ -> <- (join accum ".")} "")
+    // "+"
+    (reduce (range 80) {accum _ _ -> <- (join accum ".")} "")
   )
   
   on_state = {
@@ -97,8 +97,9 @@ screen = ({
 
 title = ({
   on_state = {
+    size_label = (string (integer (power (get state SIZE) 0.5)))
     look = (reduce (range (columns)) {accum _ _ -> <- (join accum " ") } "")
-    look = (set look (join "Crumbicon: " file_name)  0) 
+    look = (set look (join "Crumbicon: " file_name " " size_label "x" size_label )  0) 
     look = (inverse look)
 
     (draw (list 0 0 look))
@@ -108,9 +109,10 @@ title = ({
   <- (list void (list on_state void void void void))
 })
 
+
 canvas_16 = ({
   props = (list
-    22
+    23
     2
     (map (range 16) { _ _ -> 
       <- (map (range 32) { _ _ -> <-  ":"})
@@ -163,7 +165,7 @@ canvas_16 = ({
 
 canvas_8 = ({
   props = (list
-    30
+    31
     6 
     (map (range 8) { _ _ -> 
       <- (map (range 16) { _ _ -> <-  ":"})
@@ -185,6 +187,12 @@ canvas_8 = ({
         })
       })
 
+      eraser = (map (range 16) { _ _ -> 
+          <- (map (range 32) { _ _ -> <-  " "})
+        })
+      // erase the canvas area
+      (draw (dynamic_props canvas_16 eraser))
+      // draw new one
       (draw (dynamic_props canvas_8 mapped))
     })
 
@@ -377,7 +385,7 @@ color_selected = ({
 
 palette = ({
   props = (list
-    22
+    23
     19 
     (list
       (map (range 32) {_ index -> 
@@ -449,14 +457,124 @@ palette = ({
   <- (list props (list on_state void void void on_click))
 })
 
-button_save = ({
+
+label_size  = ({
   props = (list
-    55
+    58
+    2
+    "New:"
+  )
+
+  on_state = {
+    (draw (dynamic_props label_size void))
+    <- state
+  }
+
+  <- (list props (list on_state void void void void))
+})
+
+button_size_8 = ({
+  props = (list
+    67
     2
     (list
-      (list "╔" "═" "═" "═" "═" "═" "═" "╗")
-      (list "║" " " "S" "a" "v" "e" " " "║")
-      (list "╚" "═" "═" "═" "═" "═" "═" "╝")
+      (underline (list "8" "x" "8"))
+    )
+  )
+
+  on_state = {
+    (draw (dynamic_props button_size_8 void))
+    <- state
+  }
+
+  on_click = {
+    props = (dynamic_props button_size_8 void)
+
+    <- (if (is (mouse_over props mouse_xy) 1) {
+      state = (set state 64 SIZE)
+      <- (set state (map (range 64) { _ _ -> <- void}) DATA)
+    } {
+      <- state
+    })
+  }
+  <- (list props (list on_state void void void on_click))
+})
+
+button_size_16 = ({
+  props = (list
+    74
+    2
+    (list
+      (underline (list "1" "6" "x" "1" "6"))
+    )
+  )
+
+  on_state = {
+    (draw (dynamic_props button_size_16 void))
+    <- state
+  }
+
+  on_click = {
+    props = (dynamic_props button_size_16 void)
+
+    <- (if (is (mouse_over props mouse_xy) 1) {
+      state = (set state 256 SIZE)
+      <- (set state (map (range 256) { _ _ -> <- void}) DATA)
+    } {
+      <- state
+    })
+  }
+  <- (list props (list on_state void void void on_click))
+})
+
+label_finish  = ({
+  props = (list
+    58
+    19
+    "End:"
+  )
+
+  on_state = {
+    (draw (dynamic_props label_finish void))
+    <- state
+  }
+
+  <- (list props (list on_state void void void void))
+})
+
+button_exit = ({
+  props = (list
+    67
+    19
+    (list
+     (underline (list "E" "x" "i" "t"))
+    )
+  )
+
+  on_state = {
+    (draw (dynamic_props button_exit void))
+    <- state
+  }
+
+  on_click = {
+    props = (dynamic_props button_exit void)
+
+    <- (if (is (mouse_over props mouse_xy) 1) {
+      <- void
+    } {
+      <- state
+    })
+  }
+
+  <- (list props (list on_state void void void on_click))
+})
+
+button_save = ({
+  props = (list
+    75
+    19
+    (list
+      (underline (list "S" "a" "v" "e"))
     )
   )
 
@@ -478,33 +596,22 @@ button_save = ({
   <- (list props (list on_state void void void on_click))
 })
 
-button_wipe = ({
-  props = (list
-    55
-    15
-    (list
-      (list "╔" "═" "═" "═" "═" "═" "═" "╗")
-      (list "║" " " "W" "i" "p" "e" " " "║")
-      (list "╚" "═" "═" "═" "═" "═" "═" "╝")
-    )
-  )
-
-  on_state = {
-    (draw (dynamic_props button_wipe void))
-    <- state
-  }
-
-  on_click = {
-    props = (dynamic_props button_wipe void)
-
-    <- (if (is (mouse_over props mouse_xy) 1) {
-      // reset canvas_16 data
-      <- (set state (map (range 256) { _ _ -> <- void}) DATA)
-    } {
-      <- state
-    })
-  }
-  <- (list props (list on_state void void void on_click))
-})
-
-elements = (list screen centered_modal title canvas_8 canvas_16 color_picker gray_picker empty_picker sixteen_picker palette color_selected button_save button_wipe )
+elements = (list 
+  screen 
+  centered_modal 
+  title 
+  canvas_8 
+  canvas_16 
+  color_picker
+  gray_picker 
+  empty_picker
+  sixteen_picker
+  palette
+  color_selected
+  button_size_8
+  button_size_16
+  button_save
+  button_exit 
+  label_size
+  label_finish
+)
