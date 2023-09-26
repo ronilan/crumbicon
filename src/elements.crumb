@@ -68,8 +68,9 @@ screen = ({
   props = (list 
     0
     0
+    ""
     // "+"
-    (reduce (range 80) {accum _ _ -> <- (join accum ".")} "")
+    // (reduce (range 80) {accum _ _ -> <- (join accum ".")} "")
   )
   
   on_state = {
@@ -97,9 +98,8 @@ screen = ({
 
 title = ({
   on_state = {
-    size_label = (string (integer (power (get state SIZE) 0.5)))
     look = (reduce (range (columns)) {accum _ _ -> <- (join accum " ") } "")
-    look = (set look (join "Crumbicon: " file_name " " size_label "x" size_label )  0) 
+    look = (set look (join "Crumbicon: " file_name " " (string (get state SIZE)) "x" (string (get state SIZE)) )  0) 
     look = (inverse look)
 
     (draw (list 0 0 look))
@@ -120,7 +120,7 @@ canvas_16 = ({
   )
 
   on_state = {
-    (if (is (get state SIZE) 256) {
+    (if (is (get state SIZE) 16) {
       data = (get state DATA)
 
       mapped = (map (range 16) { _ row -> 
@@ -142,7 +142,7 @@ canvas_16 = ({
   }
 
   on_click = {
-    <- (if (is (get state SIZE) 256) {
+    <- (if (is (get state SIZE) 16) {
       props = (dynamic_props canvas_16 (get (get canvas_16 0) 2) )
 
       <- (if (is (mouse_over props mouse_xy) 1) {
@@ -173,7 +173,7 @@ canvas_8 = ({
   )
 
   on_state = {
-    (if (is (get state SIZE) 64) {
+    (if (is (get state SIZE) 8) {
       data = (get state DATA)
 
       mapped = (map (range 8) { _ row -> 
@@ -200,10 +200,10 @@ canvas_8 = ({
   }
 
   on_click = {
-    <- (if (is (get state SIZE) 64) {
+    <- (if (is (get state SIZE) 8) {
       props = (dynamic_props canvas_8 (get (get canvas_8 0) 2) )
 
-      <- (if (and (is (get state SIZE) 64) (is (mouse_over props mouse_xy) 1)) {
+      <- (if (is (mouse_over props mouse_xy) 1) {
         r = (subtract (get mouse_xy 1) (get props 1))
         c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) 2))
         
@@ -491,7 +491,7 @@ button_size_8 = ({
     props = (dynamic_props button_size_8 void)
 
     <- (if (is (mouse_over props mouse_xy) 1) {
-      state = (set state 64 SIZE)
+      state = (set state 8 SIZE)
       <- (set state (map (range 64) { _ _ -> <- void}) DATA)
     } {
       <- state
@@ -518,7 +518,7 @@ button_size_16 = ({
     props = (dynamic_props button_size_16 void)
 
     <- (if (is (mouse_over props mouse_xy) 1) {
-      state = (set state 256 SIZE)
+      state = (set state 16 SIZE)
       <- (set state (map (range 256) { _ _ -> <- void}) DATA)
     } {
       <- state
@@ -578,6 +578,15 @@ button_save = ({
     )
   )
 
+  on_loop = {
+    // wait till next loop to exit
+    <- (if (is (get state SAVE) 1){
+      <- void
+    } {
+      <- state
+    })
+  }
+
   on_state = {
     (draw (dynamic_props button_save void))
     <- state
@@ -587,13 +596,13 @@ button_save = ({
     props = (dynamic_props button_save void)
 
     <- (if (is (mouse_over props mouse_xy) 1) {
-      <- void
+      <- (set state 1 SAVE)
     } {
       <- state
     })
   }
 
-  <- (list props (list on_state void void void on_click))
+  <- (list props (list on_state on_loop void void on_click))
 })
 
 elements = (list 

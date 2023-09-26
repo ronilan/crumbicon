@@ -46,7 +46,7 @@ crumbicon = { path_to_file ->
     (draw splash_screen)
     (wait 1)
 
-    <- (list (map (range 64) { _ _ -> <- void}) (map (range 8) { _ _ -> <- void}) 64)
+    <- (list (map (range 64) { _ _ -> <- void}) (map (range 8) { _ _ -> <- void}) 8)
   } {
     // try and extract data from file
     crumbicon-data = (data_from_file text "<!-- crumbicon-data" "crumbicon-data -->")
@@ -59,7 +59,7 @@ crumbicon = { path_to_file ->
       (draw (splash_message (color 9 (join file_name " is not a valid Crumbicon icon"))))
       <- void
     } {
-      <- (list crumbicon-data crumbicon-palette (length crumbicon-data))
+      <- (list crumbicon-data crumbicon-palette (integer (power (length crumbicon-data) 0.5)))
     })
   })
 }
