@@ -1,88 +1,44 @@
-// utility
-
-// split a string on a single char separator
-split = {in sep ->
-  // convert to list of chars
-  arr = (map (range (length in)) {index _ -> <- (get in index)})
-  // reduce list of chars to list of words
-  <- (if (is sep "") {<- arr} {
-    <- (reduce arr {acc char _ ->
-      last_index = (subtract (length acc) 1)
-
-      <- (if (is char sep) {
-        // add new item to result if we come across a separator
-        <- (insert acc "") 
-      } {
-        // else, add char to the last item
-        <- (set acc (insert (get acc last_index) char) last_index)
-      })
-    } (list ""))
-  })
-}
-
-data_from_file = { text start_needle end_needle alt ->
-  <- (if (is text void) {
-    <- alt
-  } {
-    start = (find text start_needle)
-    end = (find text end_needle)
-    <- (if (or (is start void) (is end void)) {
-      <- alt
-    } {
-      <- (if (is (type start) integer) {
-        <- alt
-      } {
-        start = (add start (add (length start_needle) 1))
-        arr = (map (split (get text start end) ":") {item _ -> 
-          <- (if (is item "void") {
-            <- void
-          } {
-            <- (integer item)
-          })
-        })
-        <- arr
-      })
-    })
-  })
-}
-
 (use "./usables/colors.crumb" {
 
-  file = (if (is (length arguments) 2) {<- (get arguments 1)} {<- "favicon.svg"})
-
-  from_file = (use "import.crumb" "./usables/tui.crumb" "./splash.crumb" {
-
-    (set_up)
-    (draw splash_screen)
-    (wait 1)
-
-    <- (crumbicon file)
+  file_name = (if (is (length arguments) 2) {
+    <- (get arguments 1)
+  } {
+    <- "favicon.svg"
   })
 
-  // state access constants
-  PAINTBRUSH = 0
-  DATA = 1
-  APP_XY = 2
-  PALETTE = 3
-
-  //state after user manipulation
-  state = (use "./usables/tui.crumb" "./elements.crumb" "./splash.crumb" {
-
-    x = (integer (divide (subtract (columns) app_width) 2)) // center position on x
-    y = (integer (divide (subtract (rows) app_height) 2)) // center position on y
-
-    // initial state
-    state = (list
-      void // paintbrush color
-      (get from_file 0) // canvas data
-      (list x y) // screen anchor
-      (list 0 (get from_file 1)) // palette
-    )
-
-    <- (start state elements)
+  from_file = (use "./src/import.crumb" "./usables/tui.crumb" "./src/splash.crumb" {
+    <- (crumbicon file_name)
   })
 
-  (use "export.crumb" "./usables/tui.crumb" "./splash.crumb" {
-    (svg (get state DATA) (list 16 16 30) (get (get state PALETTE) 1) file)
+  (if (not (is from_file void)) {
+    // state access constants
+    APP_XY = 0
+    PAINTBRUSH = 1
+    DATA = 2
+    PALETTE = 3
+    SIZE = 4
+
+    //state after user manipulation
+    state = (use "./usables/tui.crumb" "./src/elements.crumb" "./src/splash.crumb" {
+
+      x = (integer (divide (subtract (columns) app_width) 2)) // center position on x
+      y = (integer (divide (subtract (rows) app_height) 2)) // center position on y
+
+      // initial state
+      state = (list
+        (list x y) // screen anchor
+        void // paintbrush color
+        (get from_file 0) // canvas data
+        (list 0 (get from_file 1)) // palette
+        (get from_file 2) // size
+      )
+
+      <- (start state elements)
+    })
+
+    (use "./src/export.crumb" "./usables/tui.crumb" "./src/splash.crumb" {
+      (svg (get state DATA) (list 16 16 30) (get (get state PALETTE) 1) file_name)
+    })
   })
+
 })

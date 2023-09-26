@@ -69,6 +69,7 @@ screen = ({
     0
     0
     "+"
+    // (reduce (range 80) {accum _ _ -> <- (join accum ".")} "")
   )
   
   on_state = {
@@ -97,7 +98,7 @@ screen = ({
 title = ({
   on_state = {
     look = (reduce (range (columns)) {accum _ _ -> <- (join accum " ") } "")
-    look = (set look (join "Crumbicon: " file)  0) 
+    look = (set look (join "Crumbicon: " file_name)  0) 
     look = (inverse look)
 
     (draw (list 0 0 look))
@@ -107,45 +108,105 @@ title = ({
   <- (list void (list on_state void void void void))
 })
 
-canvas = ({
+canvas_16 = ({
   props = (list
-    22 // (integer (divide (subtract (columns) 32) 2)) // center position on x
-    2 //(subtract (integer (divide (subtract (rows) 16) 2)) 6)// center position on y and up
+    22
+    2
     (map (range 16) { _ _ -> 
       <- (map (range 32) { _ _ -> <-  ":"})
     })
   )
 
   on_state = {
-    data = (get state DATA)
+    (if (is (get state SIZE) 256) {
+      data = (get state DATA)
 
-    mapped = (map (range 16) { _ row -> 
-      <- (map (range 32) { _ col -> 
-        halfcol = (integer (divide col 2))
-        <- (if (is (get data (add (multiply row 16) halfcol)) void) {
-          <- ":"
-        } {
-          <- (background (get data (add (multiply row 16) halfcol)) " ")
+      mapped = (map (range 16) { _ row -> 
+        <- (map (range 32) { _ col -> 
+          halfcol = (integer (divide col 2))
+          <- (if (is (get data (add (multiply row 16) halfcol)) void) {
+            <- ":"
+          } {
+            <- (background (get data (add (multiply row 16) halfcol)) " ")
+          })
         })
       })
+
+
+      (draw (dynamic_props canvas_16 mapped))
     })
 
-    (draw (dynamic_props canvas mapped))
     <- state
   }
 
   on_click = {
-    props = (dynamic_props canvas (get (get canvas 0) 2) )
+    <- (if (is (get state SIZE) 256) {
+      props = (dynamic_props canvas_16 (get (get canvas_16 0) 2) )
 
-    <- (if (is (mouse_over props mouse_xy) 1) {
-      r = (subtract (get mouse_xy 1) (get props 1))
-      c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) 2))
-      
-      data = (set (get state DATA) (get state PAINTBRUSH) (add (multiply r 16) c))
+      <- (if (is (mouse_over props mouse_xy) 1) {
+        r = (subtract (get mouse_xy 1) (get props 1))
+        c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) 2))
+        
+        data = (set (get state DATA) (get state PAINTBRUSH) (add (multiply r 16) c))
 
-      <- (set state data DATA)
+        <- (set state data DATA)
+      } {
+        <- state
+      })
     } {
       <- state
+    })
+  }
+
+  <- (list props (list on_state void void void on_click))
+})
+
+canvas_8 = ({
+  props = (list
+    30
+    6 
+    (map (range 8) { _ _ -> 
+      <- (map (range 16) { _ _ -> <-  ":"})
+    })
+  )
+
+  on_state = {
+    (if (is (get state SIZE) 64) {
+      data = (get state DATA)
+
+      mapped = (map (range 8) { _ row -> 
+        <- (map (range 16) { _ col -> 
+          halfcol = (integer (divide col 2))
+          <- (if (is (get data (add (multiply row 8) halfcol)) void) {
+            <- ":"
+          } {
+            <- (background (get data (add (multiply row 8) halfcol)) " ")
+          })
+        })
+      })
+
+      (draw (dynamic_props canvas_8 mapped))
+    })
+
+    <- state
+  }
+
+  on_click = {
+    <- (if (is (get state SIZE) 64) {
+      props = (dynamic_props canvas_8 (get (get canvas_8 0) 2) )
+
+      <- (if (and (is (get state SIZE) 64) (is (mouse_over props mouse_xy) 1)) {
+        r = (subtract (get mouse_xy 1) (get props 1))
+        c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) 2))
+        
+        data = (set (get state DATA) (get state PAINTBRUSH) (add (multiply r 8) c))
+
+        <- (set state data DATA)
+      } {
+        <- state
+      })
+    } {
+     <- state
     })
   }
 
@@ -437,7 +498,7 @@ button_wipe = ({
     props = (dynamic_props button_wipe void)
 
     <- (if (is (mouse_over props mouse_xy) 1) {
-      // reset canvas data
+      // reset canvas_16 data
       <- (set state (map (range 256) { _ _ -> <- void}) DATA)
     } {
       <- state
@@ -446,4 +507,4 @@ button_wipe = ({
   <- (list props (list on_state void void void on_click))
 })
 
-elements = (list screen centered_modal title canvas color_picker gray_picker empty_picker sixteen_picker palette color_selected button_save button_wipe )
+elements = (list screen centered_modal title canvas_8 canvas_16 color_picker gray_picker empty_picker sixteen_picker palette color_selected button_save button_wipe )

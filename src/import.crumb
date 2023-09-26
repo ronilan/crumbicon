@@ -1,0 +1,65 @@
+crumbicon = { path_to_file ->
+  // utility
+  // split a string on a single char separator
+  split = {in sep ->
+    // convert to list of chars
+    arr = (map (range (length in)) {index _ -> <- (get in index)})
+    // reduce list of chars to list of words
+    <- (if (is sep "") {<- arr} {
+      <- (reduce arr {acc char _ ->
+        last_index = (subtract (length acc) 1)
+
+        <- (if (is char sep) {
+          // add new item to result if we come across a separator
+          <- (insert acc "") 
+        } {
+          // else, add char to the last item
+          <- (set acc (insert (get acc last_index) char) last_index)
+        })
+      } (list ""))
+    })
+  }
+
+  data_from_file = { text start_needle end_needle ->
+    start = (find text start_needle)
+    end = (find text end_needle)
+    <- (if (or (is start void) (is end void)) {
+      <- void // the file exist but no valid crumbicon data found
+    } {
+      start = (add start (add (length start_needle) 1))
+      <- (map (split (get text start end) ":") {item _ -> 
+        <- (if (is item "void") {
+          <- void
+        } {
+          <- (integer item)
+        })
+      })
+    })
+  }
+
+  text = (read_file path_to_file)
+  <- (if (is text void) {
+    // can't open file or file does not exist
+    // creating new one
+    // show off
+    (set_up)
+    (draw splash_screen)
+    (wait 1)
+
+    <- (list (map (range 64) { _ _ -> <- void}) (map (range 8) { _ _ -> <- void}) 64)
+  } {
+    // try and extract data from file
+    crumbicon-data = (data_from_file text "<!-- crumbicon-data" "crumbicon-data -->")
+    crumbicon-palette = (data_from_file text "<!-- crumbicon-palette" "crumbicon-palette -->" )
+
+    <- (if (or (is crumbicon-data void) (is crumbicon-palette void)) {
+      // file exist but was not created by crumbicon
+      // send notice and exit
+      (set_up)
+      (draw (splash_message (color 9 (join file_name " is not a valid Crumbicon icon"))))
+      <- void
+    } {
+      <- (list crumbicon-data crumbicon-palette (length crumbicon-data))
+    })
+  })
+}

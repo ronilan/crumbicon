@@ -1,22 +1,27 @@
-message_mapped = { text -> 
-  <- (map (range (subtract (rows) 0)) { _ index -> 
-    <- (if (is index (integer (divide (rows) 2))) {
-      r = (map (range (subtract (columns) 0)) { _ _ ->
-        <- " "
-      })
-      point = (subtract (integer (divide (columns) 2)) (integer (divide (length text) 2 ) ))
-      point = (if (less_than point 0) {
-        <- 0
-      }{
-        <- point
-      })
-      <- (set r text point)
-    } {
-      <- (map (range (subtract (columns) 0)) { _ _ ->
-        <- "  "
+
+splash_message = { text -> 
+  <- (list 
+    0 
+    0 
+    (map (range (subtract (rows) 0)) { _ index -> 
+      <- (if (is index (integer (divide (rows) 2))) {
+        r = (map (range (subtract (columns) 0)) { _ _ ->
+          <- " "
+        })
+        point = (subtract (integer (divide (columns) 2)) (integer (divide (length text) 2 ) ))
+        point = (if (less_than point 0) {
+          <- 0
+        }{
+          <- point
+        })
+        <- (set r text point)
+      } {
+        <- (map (range (subtract (columns) 0)) { _ _ ->
+          <- "  "
+        })
       })
     })
-  })
+  )
 }
 
 splash_screen = (list 
