@@ -23,6 +23,21 @@ dynamic_props = { element look ->
   })
 }
 
+ideal_palette_index = { curr palette ->
+  <- (if (is (find palette void) void) {
+    <- (remainder (add curr 1) 8)
+  }{
+    <- (find palette void)
+  })
+}
+
+set_palette_in_state = { value ->
+  curr = (get (get state PALETTE) 0)
+  palette = (set (get (get state PALETTE) 1) value curr)
+
+  <- (set state (list (ideal_palette_index curr palette) palette) PALETTE)
+}
+
 app_width = 80
 app_height = 24
 
@@ -109,11 +124,10 @@ title = ({
   <- (list void (list on_state void void void void))
 })
 
-
 canvas_16 = ({
   props = (list
     23
-    2
+    3
     (map (range 16) { _ _ -> 
       <- (map (range 32) { _ _ -> <-  ":"})
     })
@@ -163,10 +177,11 @@ canvas_16 = ({
   <- (list props (list on_state void void void on_click))
 })
 
+
 canvas_8 = ({
   props = (list
     31
-    6 
+    8 
     (map (range 8) { _ _ -> 
       <- (map (range 16) { _ _ -> <-  ":"})
     })
@@ -244,9 +259,7 @@ color_picker = ({
       c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
       calculated = (add (add (multiply r 12) c) 16)
 
-      pl = (get (get state PALETTE) 0)
-      palette = (set (get (get state PALETTE) 1) calculated pl)
-      state = (set state (list pl palette) PALETTE)
+      state = (set_palette_in_state calculated)
 
       <- (set state calculated PAINTBRUSH)
     } {
@@ -258,8 +271,8 @@ color_picker = ({
 
 gray_picker = ({
   props = (list
-    16 //(subtract (integer (divide (subtract (columns) 3) 2)) 20) // center position on x and left
-    2 //(add (integer (divide (subtract (rows) 16) 2)) 11)// center position on y and down
+    16
+    2
     (map (range 12) { item row -> 
       <- (map (range 2) { item col -> <- (background (add (multiply row 2) col 232) " ")})
     })
@@ -279,9 +292,7 @@ gray_picker = ({
       c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
       calculated = (add (add (multiply r 2) c) 232)
 
-      pl = (get (get state PALETTE) 0)
-      palette = (set (get (get state PALETTE) 1) calculated pl)
-      state = (set state (list pl palette) PALETTE)
+      state = (set_palette_in_state calculated)
 
       <- (set state calculated PAINTBRUSH)
     } {
@@ -294,8 +305,8 @@ gray_picker = ({
 
 sixteen_picker = ({
   props = (list
-    1 // (add (integer (divide (subtract (columns) 1) 2)) 20) // center position on x and left
-    2 // (add (integer (divide (subtract (rows) 16) 2)) 11)// center position on y and down
+    1
+    2
     (map (range 16) { item row -> 
       <- (map (range 1) { item col -> <- 
         (background 
@@ -318,9 +329,7 @@ sixteen_picker = ({
       c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) // (get (get component 1) 0) == x
       calculated = (rgb_to_ansi_8 (ansi_8_to_rgb (add (multiply r 1) c) )) 
 
-      pl = (get (get state PALETTE) 0)
-      palette = (set (get (get state PALETTE) 1) calculated pl)
-      state = (set state (list pl palette) PALETTE)
+      state = (set_palette_in_state calculated)
 
       <- (set state calculated PAINTBRUSH)
     } {
@@ -333,8 +342,9 @@ sixteen_picker = ({
 empty_picker = ({
   props = (list
     16
-    19
+    18
     (list 
+      (list ":" ":")
       (list ":" ":")
     )
   )
@@ -349,9 +359,7 @@ empty_picker = ({
 
     <- (if (is (mouse_over props mouse_xy) 1) {
 
-      pl = (get (get state PALETTE) 0)
-      palette = (set (get (get state PALETTE) 1) void pl)
-      state = (set state (list pl palette) PALETTE)
+      state = (set_palette_in_state void)
 
       <- (set state void PAINTBRUSH)
     } {
@@ -364,9 +372,11 @@ empty_picker = ({
 
 color_selected = ({
   props = (list 
-    20
-    2
-    (list " " " " " " " " " " " " " " " " " " " " " " " " " " " " " " " ")
+    61
+    6
+    (map (range 2) { _ _ -> 
+      <- (map (range 15) { _ _ -> <-  " "})
+    })
   )
 
   on_state = {
@@ -383,10 +393,31 @@ color_selected = ({
   <- (list props (list on_state void void void void))
 })
 
+color_selected_label = ({
+  props = (list 
+    62
+    5
+    ""
+  )
+
+  on_state = {
+    str = (if (is (get state PAINTBRUSH) void ) {
+      <- (string_pad_end ":transparent:" 13 " ")
+    } {
+      <-  (join (string_pad_end (string (get state PAINTBRUSH)) 3 " ") "   #" (ansi_8_to_hex (get state PAINTBRUSH)))
+    })
+    
+    (draw (dynamic_props color_selected_label str))
+    <-state
+  }
+
+  <- (list props (list on_state void void void void))
+})
+
 palette = ({
   props = (list
     23
-    19 
+    21 
     (list
       (map (range 32) {_ index -> 
         <- (if (or (is (remainder index 4) 1) (is (remainder index 4) 2)) {<- ":"} {<- " "})
@@ -460,7 +491,7 @@ palette = ({
 
 label_size  = ({
   props = (list
-    58
+    59
     2
     "New:"
   )
@@ -529,7 +560,7 @@ button_size_16 = ({
 
 label_finish  = ({
   props = (list
-    58
+    59
     19
     "End:"
   )
@@ -617,6 +648,7 @@ elements = (list
   sixteen_picker
   palette
   color_selected
+  color_selected_label
   button_size_8
   button_size_16
   button_save

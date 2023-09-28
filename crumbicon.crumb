@@ -28,11 +28,11 @@
       // initial state
       state = (list
         (list x y) // screen anchor
-        void // paintbrush color
+        (get (get from_file 1) 0) // paintbrush color from first position in palette
         (get from_file 0) // canvas data
-        (list 0 (get from_file 1)) // palette
+        (list (ideal_palette_index -1 (get from_file 1)) (get from_file 1)) // palette
         (get from_file 2) // size
-        1 // save or abort?
+        void // save or abort?
       )
 
       <- (start state elements)
@@ -40,7 +40,7 @@
 
     (if (is (get state SAVE) 1) {
       (use "./src/export.crumb" "./usables/tui.crumb" "./src/splash.crumb" {
-        (svg (get state DATA) (list 16 16 30) (get (get state PALETTE) 1) file_name)
+        (svg (get state DATA) (list (get state SIZE) (get state SIZE) 30) (get (get state PALETTE) 1) file_name)
       })
     })
   })
