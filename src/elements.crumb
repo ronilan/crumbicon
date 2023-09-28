@@ -181,7 +181,7 @@ canvas_16 = ({
 canvas_8 = ({
   props = (list
     31
-    8 
+    7
     (map (range 8) { _ _ -> 
       <- (map (range 16) { _ _ -> <-  ":"})
     })
