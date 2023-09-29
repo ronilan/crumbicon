@@ -1,27 +1,35 @@
 (use "./usables/colors.crumb" {
 
-  file_name = (if (is (length arguments) 2) {
+  // argument is assumed to be a relative path.
+  path_to_file = (if (is (length arguments) 2) {
     <- (get arguments 1)
   } {
     <- "favicon.svg"
   })
 
+  // get data from file or create blank
   from_file = (use "./src/import.crumb" "./usables/tui.crumb" "./src/splash.crumb" {
-    <- (crumbicon file_name)
+    <- (crumbicon path_to_file)
   })
 
+  // when file exist, but is not a crumbicon file, the program will terminate
   (if (not (is from_file void)) {
     // state access constants
     APP_XY = 0
     PAINTBRUSH = 1
-    DATA = 2
-    PALETTE = 3
-    SIZE = 4
-    SAVE = 5
-    CANDIDATE = 6
+    CANDIDATE = 2
+    DATA = 3
+    PALETTE = 4
+    SIZE = 5
+    SAVE = 6
 
-    //state after user manipulation
-    state = (use "./usables/tui.crumb" "./src/elements.crumb" "./src/splash.crumb" {
+    X = 0
+    Y = 1
+    PALETTE_INDEX = 0
+    PALETTE_COLORS = 1
+
+    //state after user manipulation via UI
+    state = (use "./usables/tui.crumb" "./src/elements.crumb" {
 
       x = (integer (divide (subtract (columns) app_width) 2)) // center position on x
       y = (integer (divide (subtract (rows) app_height) 2)) // center position on y
@@ -30,21 +38,21 @@
       state = (list
         (list x y) // screen anchor
         (get (get from_file 1) 0) // paintbrush color from first position in palette
+        (subtract 0 1) // candidate color set to -1 which is nothing (not transparent  and not color)
         (get from_file 0) // canvas data
         (list (ideal_palette_index -1 (get from_file 1)) (get from_file 1)) // palette
         (get from_file 2) // size
         void // save or abort?
-        (subtract 0 1)
       )
 
       <- (start state elements)
     })
 
+    // after UI is exited, check if save is needed.
     (if (is (get state SAVE) 1) {
       (use "./src/export.crumb" "./usables/tui.crumb" "./src/splash.crumb" {
-        (svg (get state DATA) (list (get state SIZE) (get state SIZE) 30) (get (get state PALETTE) 1) file_name)
+        (svg (get state DATA) (list (get state SIZE) (get state SIZE) 30) (get (get state PALETTE) 1) path_to_file)
       })
     })
   })
-
 })
