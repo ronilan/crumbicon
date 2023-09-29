@@ -25,7 +25,7 @@ dynamic_props = { element look ->
 
 ideal_palette_index = { curr palette ->
   <- (if (is (find palette void) void) {
-    <- (remainder (add curr 1) 8)
+    <- (remainder (add curr 1) (length palette))
   }{
     <- (find palette void)
   })
@@ -36,6 +36,14 @@ set_palette_in_state = { value ->
   palette = (set (get (get state PALETTE) 1) value curr)
 
   <- (set state (list (ideal_palette_index curr palette) palette) PALETTE)
+}
+
+calculate_color = { props col_num offset ->
+  r = (subtract (get mouse_xy 1) (get props 1))
+  c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
+  calculated = (add (add (multiply r col_num) c) offset)
+  
+  <- calculated
 }
 
 app_width = 80
@@ -108,7 +116,14 @@ screen = ({
     })
   }
 
-  <- (list props (list on_state on_loop void void void))
+  on_move = {
+    // for when the mouse is NOT over any picker/palette
+    (draw (dynamic_props color_candidate void))
+    (draw (dynamic_props color_candidate_label void))
+    <- state
+  }
+
+  <- (list props (list on_state on_loop void on_move void))
 })
 
 title = ({
@@ -201,12 +216,6 @@ canvas_8 = ({
           })
         })
       })
-
-      eraser = (map (range 16) { _ _ -> 
-          <- (map (range 32) { _ _ -> <-  " "})
-        })
-      // erase the canvas area
-      (draw (dynamic_props canvas_16 eraser))
       // draw new one
       (draw (dynamic_props canvas_8 mapped))
     })
@@ -236,6 +245,8 @@ canvas_8 = ({
   <- (list props (list on_state void void void on_click))
 })
 
+
+
 color_picker = ({
   props = (list
     3
@@ -250,14 +261,30 @@ color_picker = ({
     <- state
   }
 
+  on_move = {
+    props = (dynamic_props color_picker void)
+
+    (if (is (mouse_over props mouse_xy) 1) {
+      calculated = (calculate_color props 12 16)
+      str =(join (string_pad_end (string calculated) 3 " ") "   #" (ansi_8_to_hex calculated))  
+
+      (draw (dynamic_props color_candidate_label str))
+      
+      mapped = (if (is calculated void) {
+        <- (get (get color_selected 0) 2)
+      }{
+        <- (background calculated (get (get color_selected 0) 2))
+      })
+      (draw (dynamic_props color_candidate mapped))
+    })
+    <- state
+  }
+
   on_click = {
     props = (dynamic_props color_picker void)
 
     <- (if (is (mouse_over props mouse_xy) 1) {
-      // calculate color
-      r = (subtract (get mouse_xy 1) (get props 1))
-      c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
-      calculated = (add (add (multiply r 12) c) 16)
+      calculated = (calculate_color props 12 16)
 
       state = (set_palette_in_state calculated)
 
@@ -266,7 +293,7 @@ color_picker = ({
       <- state
     })
   }
-  <- (list props (list on_state void void void on_click))
+  <- (list props (list on_state void void on_move on_click))
 })
 
 gray_picker = ({
@@ -283,14 +310,30 @@ gray_picker = ({
     <- state
   }
 
+  on_move = {
+    props = (dynamic_props gray_picker void)
+
+    (if (is (mouse_over props mouse_xy) 1) {
+      calculated = (calculate_color props 2 232)
+      str =(join (string_pad_end (string calculated) 3 " ") "   #" (ansi_8_to_hex calculated))  
+
+      (draw (dynamic_props color_candidate_label str))
+      
+      mapped = (if (is calculated void) {
+        <- (get (get color_selected 0) 2)
+      }{
+        <- (background calculated (get (get color_selected 0) 2))
+      })
+      (draw (dynamic_props color_candidate mapped))
+    })
+    <- state
+  }
+
   on_click = {
       props = (dynamic_props gray_picker void)
 
     <- (if (is (mouse_over props mouse_xy) 1) {
-      // calculate color
-      r = (subtract (get mouse_xy 1) (get props 1))
-      c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
-      calculated = (add (add (multiply r 2) c) 232)
+      calculated = (calculate_color props 2 232)
 
       state = (set_palette_in_state calculated)
 
@@ -300,7 +343,7 @@ gray_picker = ({
     })
   }
 
-  <- (list props (list on_state void void void on_click))
+  <- (list props (list on_state void void on_move on_click))
 })
 
 sixteen_picker = ({
@@ -320,15 +363,30 @@ sixteen_picker = ({
     <- state
   }
 
+  on_move = {
+    props = (dynamic_props sixteen_picker void)
+
+    (if (is (mouse_over props mouse_xy) 1) {
+      calculated = (rgb_to_ansi_8 (ansi_8_to_rgb (calculate_color props 1 0)))
+      str =(join (string_pad_end (string calculated) 3 " ") "   #" (ansi_8_to_hex calculated))  
+
+      (draw (dynamic_props color_candidate_label str))
+      
+      mapped = (if (is calculated void) {
+        <- (get (get color_selected 0) 2)
+      }{
+        <- (background calculated (get (get color_selected 0) 2))
+      })
+      (draw (dynamic_props color_candidate mapped))
+    })
+    <- state
+  }
+
   on_click = {
       props = (dynamic_props sixteen_picker void)
 
     <- (if (is (mouse_over props mouse_xy) 1) {
-      // calculate color
-      r = (subtract (get mouse_xy 1) (get props 1)) // (get (get component 1) 1) == y
-      c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) // (get (get component 1) 0) == x
-      calculated = (rgb_to_ansi_8 (ansi_8_to_rgb (add (multiply r 1) c) )) 
-
+      calculated = (rgb_to_ansi_8 (ansi_8_to_rgb (calculate_color props 1 0)))
       state = (set_palette_in_state calculated)
 
       <- (set state calculated PAINTBRUSH)
@@ -336,7 +394,7 @@ sixteen_picker = ({
       <- state
     })
   }
-  <- (list props (list on_state void void void on_click))
+  <- (list props (list on_state void void on_move on_click))
 })
 
 empty_picker = ({
@@ -354,6 +412,17 @@ empty_picker = ({
     <- state
   }
 
+  on_move = {
+    props = (dynamic_props empty_picker void)
+
+    (if (is (mouse_over props mouse_xy) 1) {
+      (draw (dynamic_props color_candidate_label (string_pad_end ":transparent:" 13 " ")))
+      
+      (draw (dynamic_props color_candidate void))
+    })
+    <- state
+  }
+
   on_click = {
       props = (dynamic_props empty_picker void)
 
@@ -367,13 +436,34 @@ empty_picker = ({
     })
   }
 
-  <- (list props (list on_state void void void on_click))
+  <- (list props (list on_state void void on_move on_click))
+})
+
+color_selected_label = ({
+  props = (list 
+    62
+    7
+    ""
+  )
+
+  on_state = {
+    str = (if (is (get state PAINTBRUSH) void ) {
+      <- (string_pad_end ":transparent:" 13 " ")
+    } {
+      <-  (join (string_pad_end (string (get state PAINTBRUSH)) 3 " ") "   #" (ansi_8_to_hex (get state PAINTBRUSH)))
+    })
+    
+    (draw (dynamic_props color_selected_label str))
+    <-state
+  }
+
+  <- (list props (list on_state void void void void))
 })
 
 color_selected = ({
   props = (list 
     61
-    6
+    8
     (map (range 2) { _ _ -> 
       <- (map (range 15) { _ _ -> <-  " "})
     })
@@ -393,21 +483,34 @@ color_selected = ({
   <- (list props (list on_state void void void void))
 })
 
-color_selected_label = ({
+color_candidate_label = ({
   props = (list 
     62
-    5
-    ""
+    12
+    (list
+      (map (range 13) { _ _ -> <-  " "})
+    )
   )
 
   on_state = {
-    str = (if (is (get state PAINTBRUSH) void ) {
-      <- (string_pad_end ":transparent:" 13 " ")
-    } {
-      <-  (join (string_pad_end (string (get state PAINTBRUSH)) 3 " ") "   #" (ansi_8_to_hex (get state PAINTBRUSH)))
+    (draw (dynamic_props color_candidate_label void))
+    <-state
+  }
+
+  <- (list props (list on_state void void void void))
+})
+
+color_candidate = ({
+  props = (list 
+    61
+    10
+    (map (range 2) { _ _ -> 
+      <- (map (range 15) { _ _ -> <-  " "})
     })
-    
-    (draw (dynamic_props color_selected_label str))
+  )
+
+  on_state = {
+    (draw (dynamic_props color_candidate void))
     <-state
   }
 
@@ -460,6 +563,38 @@ palette = ({
     <- state
   }
 
+  on_move = {
+    props = (dynamic_props palette void)
+
+    (if (is (mouse_over props mouse_xy) 1) {
+      // calculate color
+      r = (subtract (get mouse_xy 1) (get props 1))
+      c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
+
+      hovered = (if (or (is (remainder c 4) 1) (is (remainder c 4) 2)) {
+        <- (integer (divide c 4))
+      } {
+        <- void
+      })
+
+      calculated = (if (is hovered void) {<- void } { <- (get (get (get state PALETTE) 1) hovered) })
+
+      (if(not(is calculated void)){
+        str = (join (string_pad_end (string calculated) 3 " ") "   #" (ansi_8_to_hex calculated))
+        (draw (dynamic_props color_candidate_label str))
+        
+        mapped = (if (is calculated void) {
+          <- (get (get color_selected 0) 2)
+        }{
+          <- (background calculated (get (get color_selected 0) 2))
+        })
+        (draw (dynamic_props color_candidate mapped))
+      })
+
+    })
+    <- state
+  }
+
   on_click = {
     props = (dynamic_props palette void)
 
@@ -485,7 +620,7 @@ palette = ({
     })
   }
 
-  <- (list props (list on_state void void void on_click))
+  <- (list props (list on_state void void on_move on_click))
 })
 
 
@@ -522,11 +657,19 @@ button_size_8 = ({
     props = (dynamic_props button_size_8 void)
 
     <- (if (is (mouse_over props mouse_xy) 1) {
+      // erase the canvas area
+      eraser = (map (range 16) { _ _ -> 
+          <- (map (range 32) { _ _ -> <-  " "})
+        })
+      (draw (dynamic_props canvas_16 eraser))
+
       state = (set state 8 SIZE)
       <- (set state (map (range 64) { _ _ -> <- void}) DATA)
     } {
       <- state
     })
+
+
   }
   <- (list props (list on_state void void void on_click))
 })
@@ -647,8 +790,10 @@ elements = (list
   empty_picker
   sixteen_picker
   palette
-  color_selected
   color_selected_label
+  color_selected
+  color_candidate
+  color_candidate_label
   button_size_8
   button_size_16
   button_save

@@ -1,8 +1,5 @@
 // drawing elements
-draw = { element ->
-  // deconstruct for readability
-  props = element
-
+draw = { props ->
   // all calculations are on a screen where top left is 0, 0
   // escape codes are on a system based on 1, 1
   x = (add (get props 0) 1)

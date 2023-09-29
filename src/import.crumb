@@ -37,15 +37,14 @@ crumbicon = { path_to_file ->
     })
   }
 
+  // show off
+  (set_up)
+  (draw splash_screen)
+  (wait 0.5)
+  
   text = (read_file path_to_file)
-  <- (if (is text void) {
-    // can't open file or file does not exist
-    // creating new one
-    // show off
-    (set_up)
-    (draw splash_screen)
-    (wait 1)
 
+  <- (if (is text void) {
     <- (list (map (range 64) { _ _ -> <- void}) (map (range 8) { _ _ -> <- void}) 8)
   } {
     // try and extract data from file

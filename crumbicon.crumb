@@ -18,6 +18,7 @@
     PALETTE = 3
     SIZE = 4
     SAVE = 5
+    CANDIDATE = 6
 
     //state after user manipulation
     state = (use "./usables/tui.crumb" "./src/elements.crumb" "./src/splash.crumb" {
@@ -33,6 +34,7 @@
         (list (ideal_palette_index -1 (get from_file 1)) (get from_file 1)) // palette
         (get from_file 2) // size
         void // save or abort?
+        void
       )
 
       <- (start state elements)
