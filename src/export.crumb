@@ -11,12 +11,12 @@ svg = { data props palette target ->
   }
 
   (set_up)
-  (draw (splash_message (color 10 (join "Exporting " target))))
+  (colored_splash_msg 10 (join "Exporting " target))
+  (tear_down)
 
   num_rows = (get props 0)
   num_columns = (get props 1)
   pixel_width = (get props 2)
-
 
   open = (join 
     "<svg version=\"1.1\" baseProfile=\"full\"  width=\""
@@ -53,7 +53,8 @@ svg = { data props palette target ->
 
   (write_file target str)
 
-  (draw (splash_message (color 10 (join "Saved " target))))
+  (set_up)
+  (colored_splash_msg 10 (join "Saved " target))
   (wait 0.5)
   (tear_down)
 }

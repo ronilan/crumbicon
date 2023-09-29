@@ -1,3 +1,4 @@
+// utility functions shared by event functions
 dynamic_props = { element look ->
   <-(if (is (type state) "string" ){
     <- (list 0 0 "")
@@ -9,13 +10,13 @@ dynamic_props = { element look ->
     y = (add (get xy 1) (get props 1))
 
     <- (if (or
-      (less_than (get (get state APP_XY) 0) 0)
-      (less_than (get (get state APP_XY) 1) 0)
+      (less_than (get (get state APP_XY) X) 0)
+      (less_than (get (get state APP_XY) Y) 0)
     ) {
       <- (list x y "")
     } {
       <- (if (is look void) {
-        <- (list x y (get (get element 0) 2)) 
+        <- (list x y (get (get element 0) 2))
       } {
         <- (list x y look)
       })
@@ -32,8 +33,8 @@ ideal_palette_index = { curr palette ->
 }
 
 set_palette_in_state = { value ->
-  curr = (get (get state PALETTE) 0)
-  palette = (set (get (get state PALETTE) 1) value curr)
+  curr = (get (get state PALETTE) PALETTE_INDEX)
+  palette = (set (get (get state PALETTE) PALETTE_COLORS) value curr)
 
   <- (set state (list (ideal_palette_index curr palette) palette) PALETTE)
 }
@@ -46,18 +47,20 @@ calculate_color = { props col_num offset ->
   <- calculated
 }
 
+// settings
 app_width = 80
 app_height = 24
 
+// elements
 centered_modal = ({
   props = (list 0 0 "")
 
   on_state = {
     (if (or
-      (less_than (get (get state APP_XY) 0) 0)
-      (less_than (get (get state APP_XY) 1) 0)
+      (less_than (get (get state APP_XY) X) 0)
+      (less_than (get (get state APP_XY) Y) 0)
     ) {
-      mapped = (map (range (subtract (rows) 0)) { _ index -> 
+      look = (map (range (subtract (rows) 0)) { _ index ->
         <- (if (is index (integer (divide (rows) 2))) {
           r = (map (range (subtract (columns) 0)) { _ _ ->
             <- " "
@@ -76,7 +79,7 @@ centered_modal = ({
         })
       })
 
-      (draw (list 0 0 mapped))
+      (draw (list 0 0 look))
     } {
       (draw (list 0 0 ""))
     })
@@ -92,42 +95,7 @@ screen = ({
     0
     0
     ""
-    // "+"
-    // (reduce (range 80) {accum _ _ -> <- (join accum ".")} "")
   )
-  
-  on_move = {
-    // for when the mouse is NOT over any picker/palette
-    <- (if 
-      (not (or
-        (is (mouse_over (dynamic_props color_picker void) mouse_xy) 1)
-        (is (mouse_over (dynamic_props gray_picker void) mouse_xy) 1)
-        (is (mouse_over (dynamic_props sixteen_picker void) mouse_xy) 1)
-        (is (mouse_over (dynamic_props empty_picker void) mouse_xy) 1)
-        (is (mouse_over (dynamic_props palette_picker void) mouse_xy) 1)
-      )) {
-    
-      mapped = (if (is (get state PAINTBRUSH) void) {
-        <- (get (get color_candidate 0) 2)
-      }{
-        <- (background (get state PAINTBRUSH) (get (get color_candidate 0) 2))
-      })
-
-      (draw (dynamic_props color_candidate mapped))
-      (draw (dynamic_props color_candidate_label void))
-
-      <- (set state (subtract 0 1) CANDIDATE)
-    } {
-      <- state
-    })
-
-  }
-
-
-  on_state = {
-    (draw (dynamic_props screen void))
-    <- state
-  }
 
   on_loop = {
     x = (integer (divide (subtract (columns) app_width) 2)) // center position on x
@@ -144,15 +112,53 @@ screen = ({
     })
   }
 
+  on_keypress = {
+    // exit with escape
+    <- (if (is keypress_name "escape") {
+      <- void
+    } {
+      <- state
+    })
+  }
 
+  on_move = {
+    // for when the mouse is NOT over any picker/palette
+    <- (if 
+      (not (or
+        (is (mouse_over (dynamic_props color_picker void) mouse_xy) 1)
+        (is (mouse_over (dynamic_props gray_picker void) mouse_xy) 1)
+        (is (mouse_over (dynamic_props sixteen_picker void) mouse_xy) 1)
+        (is (mouse_over (dynamic_props empty_picker void) mouse_xy) 1)
+        (is (mouse_over (dynamic_props palette_picker void) mouse_xy) 1)
+      )) {
+    
+      look = (if (is (get state PAINTBRUSH) void) {
+        <- (get (get color_candidate 0) 2)
+      }{
+        <- (background (get state PAINTBRUSH) (get (get color_candidate 0) 2))
+      })
 
-  <- (list props (list on_state on_loop void on_move void))
+      (draw (dynamic_props color_candidate look))
+      (draw (dynamic_props color_candidate_label void))
+
+      <- (set state (subtract 0 1) CANDIDATE)
+    } {
+      <- state
+    })
+  }
+
+  on_state = {
+    (draw (dynamic_props screen void))
+    <- state
+  }
+
+  <- (list props (list on_state on_loop on_keypress on_move void))
 })
 
 title = ({
   on_state = {
     look = (reduce (range (columns)) {accum _ _ -> <- (join accum " ") } "")
-    look = (set look (join "Crumbicon: " file_name " " (string (get state SIZE)) "x" (string (get state SIZE)) )  0) 
+    look = (set look (join "Crumbicon: " path_to_file " " (string (get state SIZE)) "x" (string (get state SIZE)) )  0) 
     look = (inverse look)
 
     (draw (list 0 0 look))
@@ -175,7 +181,7 @@ canvas_16 = ({
     (if (is (get state SIZE) 16) {
       data = (get state DATA)
 
-      mapped = (map (range 16) { _ row -> 
+      look = (map (range 16) { _ row -> 
         <- (map (range 32) { _ col -> 
           halfcol = (integer (divide col 2))
           <- (if (is (get data (add (multiply row 16) halfcol)) void) {
@@ -186,8 +192,7 @@ canvas_16 = ({
         })
       })
 
-
-      (draw (dynamic_props canvas_16 mapped))
+      (draw (dynamic_props canvas_16 look))
     })
 
     <- state
@@ -215,7 +220,6 @@ canvas_16 = ({
   <- (list props (list on_state void void void on_click))
 })
 
-
 canvas_8 = ({
   props = (list
     31
@@ -229,7 +233,7 @@ canvas_8 = ({
     (if (is (get state SIZE) 8) {
       data = (get state DATA)
 
-      mapped = (map (range 8) { _ row -> 
+      look = (map (range 8) { _ row -> 
         <- (map (range 16) { _ col -> 
           halfcol = (integer (divide col 2))
           <- (if (is (get data (add (multiply row 8) halfcol)) void) {
@@ -240,7 +244,7 @@ canvas_8 = ({
         })
       })
       // draw new one
-      (draw (dynamic_props canvas_8 mapped))
+      (draw (dynamic_props canvas_8 look))
     })
 
     <- state
@@ -267,8 +271,6 @@ canvas_8 = ({
 
   <- (list props (list on_state void void void on_click))
 })
-
-
 
 color_picker = ({
   props = (list
@@ -308,6 +310,7 @@ color_picker = ({
       <- state
     })
   }
+
   <- (list props (list on_state void void on_move on_click))
 })
 
@@ -393,6 +396,7 @@ sixteen_picker = ({
       <- state
     })
   }
+
   <- (list props (list on_state void void on_move on_click))
 })
 
@@ -450,12 +454,12 @@ palette_picker = ({
 
   on_state = {
     pb = (get state PAINTBRUSH)
-    pl = (get (get state PALETTE) 0)
-    pll = (get (get state PALETTE) 1)
+    pl = (get (get state PALETTE) PALETTE_INDEX)
+    pll = (get (get state PALETTE) PALETTE_COLORS)
 
     look = (get (get palette_picker 0) 2)
 
-    mapped = (map look { item row ->
+    look = (map look { item row ->
         <- (map item { item col ->col
           <- (if (or (is (remainder col 4) 1) (is (remainder col 4) 2)) {
             coloring =  (get pll (integer (divide col 4)))
@@ -475,7 +479,7 @@ palette_picker = ({
         })
       })
 
-    (draw (dynamic_props palette_picker mapped))
+    (draw (dynamic_props palette_picker look))
     <- state
   }
 
@@ -493,13 +497,12 @@ palette_picker = ({
         <- void
       })
 
-      calculated = (if (is hovered void) {<- void } { <- (get (get (get state PALETTE) 1) hovered) })
+      calculated = (if (is hovered void) {<- void } { <- (get (get (get state PALETTE) PALETTE_COLORS) hovered) })
 
       <- (set state calculated CANDIDATE)
     } {
       <- state
     })
-
   }
 
   on_click = {
@@ -513,11 +516,11 @@ palette_picker = ({
       selected = (if (or (is (remainder c 4) 1) (is (remainder c 4) 2)) {
         <- (integer (divide c 4))
       } {
-        <- (get (get state PALETTE) 0)
+        <- (get (get state PALETTE) PALETTE_INDEX)
       })
-      state = (set state (set (get state PALETTE) selected 0) PALETTE)
+      state = (set state (set (get state PALETTE) selected  PALETTE_INDEX) PALETTE)
 
-      pll = (get (get state PALETTE) 1)
+      pll = (get (get state PALETTE) PALETTE_COLORS)
       pb = (get pll selected)
       state = (set state pb PAINTBRUSH)
 
@@ -562,13 +565,13 @@ color_selected = ({
   )
 
   on_state = {
-    mapped = (if (is (get state PAINTBRUSH) void) {
+    look = (if (is (get state PAINTBRUSH) void) {
       <- (get (get color_selected 0) 2)
     }{
       <- (background (get state PAINTBRUSH) (get (get color_selected 0) 2))
     })
 
-    (draw (dynamic_props color_selected mapped))
+    (draw (dynamic_props color_selected look))
     <-state
   }
 
@@ -587,7 +590,7 @@ color_candidate = ({
   on_state = {
     candidate = (get state CANDIDATE)
 
-    mapped = (if (is candidate void) {
+    look = (if (is candidate void) {
       <- (get (get color_candidate 0) 2)
     }{
       <- (if (is candidate (subtract 0 1)) {
@@ -602,7 +605,7 @@ color_candidate = ({
         <- (background candidate (get (get color_candidate 0) 2))
       })
     })
-    (draw (dynamic_props color_candidate mapped))
+    (draw (dynamic_props color_candidate look))
 
     <-state
   }
@@ -614,9 +617,7 @@ color_candidate_label = ({
   props = (list 
     62
     13
-    (list
-      (map (range 13) { _ _ -> <-  " "})
-    )
+    ""
   )
 
   on_state = {
@@ -657,6 +658,7 @@ button_size_8 = ({
   props = (list
     67
     2
+    // look for clickable elements must be in form of a 2d list
     (list
       (underline (list "8" "x" "8"))
     )
@@ -684,9 +686,8 @@ button_size_8 = ({
     } {
       <- state
     })
-
-
   }
+
   <- (list props (list on_state void void void on_click))
 })
 
@@ -694,6 +695,7 @@ button_size_16 = ({
   props = (list
     74
     2
+    // look for clickable elements must be in form of a 2d list
     (list
       (underline (list "1" "6" "x" "1" "6"))
     )
@@ -714,6 +716,7 @@ button_size_16 = ({
       <- state
     })
   }
+
   <- (list props (list on_state void void void on_click))
 })
 
@@ -736,6 +739,7 @@ button_exit = ({
   props = (list
     67
     19
+    // look for clickable elements must be in form of a 2d list
     (list
      (underline (list "E" "x" "i" "t"))
     )
@@ -763,6 +767,7 @@ button_save = ({
   props = (list
     75
     19
+    // look for clickable elements must be in form of a 2d list
     (list
       (underline (list "S" "a" "v" "e"))
     )
