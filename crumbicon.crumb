@@ -34,7 +34,7 @@
         (list (ideal_palette_index -1 (get from_file 1)) (get from_file 1)) // palette
         (get from_file 2) // size
         void // save or abort?
-        void
+        (subtract 0 1)
       )
 
       <- (start state elements)
