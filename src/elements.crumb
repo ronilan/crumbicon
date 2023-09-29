@@ -39,10 +39,16 @@ set_palette_in_state = { value ->
   <- (set state (list (ideal_palette_index curr palette) palette) PALETTE)
 }
 
-calculate_color = { props col_num offset ->
+get_row_column_in_element = { props ->
   r = (subtract (get mouse_xy 1) (get props 1))
   c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
-  calculated = (add (add (multiply r col_num) c) offset)
+
+  <- (list r c)
+}
+
+calculate_color = { props col_num offset ->
+  rc = (get_row_column_in_element props)
+  calculated = (add (add (multiply (get rc 0) col_num) (get rc 1)) offset)
   
   <- calculated
 }
@@ -203,11 +209,15 @@ canvas_16 = ({
       props = (dynamic_props canvas_16 (get (get canvas_16 0) 2) )
 
       <- (if (is (mouse_over props mouse_xy) 1) {
-        r = (subtract (get mouse_xy 1) (get props 1))
-        c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) 2))
-        
-        data = (set (get state DATA) (get state PAINTBRUSH) (add (multiply r 16) c))
+        rc = (get_row_column_in_element props)
 
+        is_double_click = (if (is (add (get state CLICK_LOOP) 1) loop_count) {
+          // TODO
+        }) 
+
+        data = (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 16) (integer (divide (get rc 1) 2))))
+
+        state = (set state loop_count CLICK_LOOP)
         <- (set state data DATA)
       } {
         <- state
@@ -255,11 +265,15 @@ canvas_8 = ({
       props = (dynamic_props canvas_8 (get (get canvas_8 0) 2) )
 
       <- (if (is (mouse_over props mouse_xy) 1) {
-        r = (subtract (get mouse_xy 1) (get props 1))
-        c = (integer (divide (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1) 2))
-        
-        data = (set (get state DATA) (get state PAINTBRUSH) (add (multiply r 8) c))
+        rc = (get_row_column_in_element props)
 
+        is_double_click = (if (is (add (get state CLICK_LOOP) 1) loop_count) {
+          // TODO
+        }) 
+
+        data = (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 8) (integer (divide (get rc 1) 2))))
+
+        state = (set state loop_count CLICK_LOOP)
         <- (set state data DATA)
       } {
         <- state

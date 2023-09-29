@@ -22,6 +22,7 @@
     PALETTE = 4
     SIZE = 5
     SAVE = 6
+    CLICK_LOOP = 7
 
     X = 0
     Y = 1
@@ -43,6 +44,7 @@
         (list (ideal_palette_index -1 (get from_file 1)) (get from_file 1)) // palette
         (get from_file 2) // size
         void // save or abort?
+        0 // last loop in which a click was recorded
       )
 
       <- (start state elements)
