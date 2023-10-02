@@ -53,6 +53,32 @@ calculate_color = { props col_num offset ->
   <- calculated
 }
 
+flood_fill = {data source_row source_col num_row num_col source color ->
+  <- (if (or
+    (less_than source_row 0)
+    (greater_than source_row (subtract num_row 1))
+    (less_than source_col 0)
+    (greater_than source_col (subtract num_col 1))
+  ) { 
+    <- data 
+  } (is source color) {
+    <- data
+  } {
+    <- (if (not (is (get data (add (multiply source_row num_col) source_col)) source)) {
+      <- data
+    } {
+      data = (set data color (add (multiply source_row num_col) source_col))
+
+      data = (flood_fill data (subtract source_row 1) source_col num_row num_col source color)
+      data = (flood_fill data (add source_row 1) source_col num_row num_col source color)
+      data = (flood_fill data source_row (add source_col 1) num_row num_col source color)
+      data = (flood_fill data source_row (subtract source_col 1) num_row num_col source color)
+
+      <- data
+    })
+  })
+}
+
 // settings
 app_width = 80
 app_height = 24
@@ -211,13 +237,25 @@ canvas_16 = ({
       <- (if (is (mouse_over props mouse_xy) 1) {
         rc = (get_row_column_in_element props)
 
-        is_double_click = (if (is (add (get state CLICK_LOOP) 1) loop_count) {
-          // TODO
+        source_color = (get (get state DATA) 
+          (add 
+            (multiply 
+              (get rc 0) 
+            8) 
+            (integer (divide 
+              (get rc 1) 
+            2)
+            )
+          )
+        )
+
+        data = (if (is mouse_code 16) {
+          <- (flood_fill  (get state DATA) (get rc 0) (integer (divide (get rc 1) 2)) 16 16 source_color (get state PAINTBRUSH))
+        } {
+         <- (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 16) (integer (divide (get rc 1) 2))))
         }) 
 
-        data = (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 16) (integer (divide (get rc 1) 2))))
-
-        state = (set state loop_count CLICK_LOOP)
+        <- (set state data DATA)
         <- (set state data DATA)
       } {
         <- state
@@ -267,13 +305,24 @@ canvas_8 = ({
       <- (if (is (mouse_over props mouse_xy) 1) {
         rc = (get_row_column_in_element props)
 
-        is_double_click = (if (is (add (get state CLICK_LOOP) 1) loop_count) {
-          // TODO
+        source_color = (get (get state DATA) 
+          (add 
+            (multiply 
+              (get rc 0) 
+            8) 
+            (integer (divide 
+              (get rc 1) 
+            2)
+            )
+          )
+        )
+
+        data = (if (is mouse_code 16) {
+          <- (flood_fill  (get state DATA) (get rc 0) (integer (divide (get rc 1) 2)) 8 8 source_color (get state PAINTBRUSH))
+        } {
+         <- (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 8) (integer (divide (get rc 1) 2))))
         }) 
 
-        data = (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 8) (integer (divide (get rc 1) 2))))
-
-        state = (set state loop_count CLICK_LOOP)
         <- (set state data DATA)
       } {
         <- state

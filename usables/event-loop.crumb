@@ -113,10 +113,17 @@ start = { state listeners ->
           // mouse move
           state = (reduce_listeners 3)
 
-          // mouse click
-          // note: currently not acting on modifiers
-          // click with modifier is ignored
-          state = (if (or (is mouse_code 32) (is mouse_code 0)) {
+          // mouse click (with modifiers)
+          state = (if (or 
+            (is mouse_code 0)
+            (is mouse_code 4)
+            (is mouse_code 8)
+            (is mouse_code 16)
+            (is mouse_code 32)
+            (is mouse_code 36)
+            (is mouse_code 40)
+            (is mouse_code 48)
+          ) {
             <- (reduce_listeners 4)
           } {<- state})
 

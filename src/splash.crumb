@@ -29,7 +29,7 @@ splash_screen = {
       (list 
         (subtract (integer (divide (columns) 2)) (integer (divide 53 2 )))
         (subtract (rows) 1) 
-        (bold (faint "                     Made with Crumb                 "))
+        (faint "                     Made with Crumb                 ")
       )
     ) 
   })
