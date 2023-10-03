@@ -1,4 +1,5 @@
-// utility functions shared by event functions
+//*** utility functions shared by event functions
+
 dynamic_props = { element look ->
   <-(if (is (type state) "string" ){
     <- (list 0 0 "")
@@ -39,6 +40,7 @@ set_palette_in_state = { value ->
   <- (set state (list (ideal_palette_index curr palette) palette) PALETTE)
 }
 
+// used by pickers and canvas
 get_row_column_in_element = { props ->
   r = (subtract (get mouse_xy 1) (get props 1))
   c = (subtract (integer (subtract (add (get mouse_xy 0) 1 ) (get props 0) )) 1)
@@ -46,6 +48,7 @@ get_row_column_in_element = { props ->
   <- (list r c)
 }
 
+// used by pickers to return the ansi number under the mouse
 calculate_color = { props col_num offset ->
   rc = (get_row_column_in_element props)
   calculated = (add (add (multiply (get rc 0) col_num) (get rc 1)) offset)
@@ -53,6 +56,7 @@ calculate_color = { props col_num offset ->
   <- calculated
 }
 
+// DFS implementation using a single list (which is folded into a "2d" list)
 flood_fill = {data source_row source_col num_row num_col source color ->
   <- (if (or
     (less_than source_row 0)
@@ -79,11 +83,26 @@ flood_fill = {data source_row source_col num_row num_col source color ->
   })
 }
 
-// settings
+canvas_look_from_data = { size data ->
+  <- (map (range size) { _ row ->
+    // due to the "rectangular nature of terminal pixels,
+    // two pixels are used to represent each logical pixel"
+    <- (map (range (multiply size 2)) { _ col ->
+      halfcol = (integer (divide col 2))
+      <- (if (is (get data (add (multiply row size) halfcol)) void) {
+        <- ":"
+      } {
+        <- (background (get data (add (multiply row size) halfcol)) " ")
+      })
+    })
+  })
+}
+
+//***  settings
 app_width = 80
 app_height = 24
 
-// elements
+//***  elements
 centered_modal = ({
   props = (list 0 0 "")
 
@@ -94,9 +113,7 @@ centered_modal = ({
     ) {
       look = (map (range (subtract (rows) 0)) { _ index ->
         <- (if (is index (integer (divide (rows) 2))) {
-          r = (map (range (subtract (columns) 0)) { _ _ ->
-            <- " "
-          })
+          r = (map (range (subtract (columns) 0)) { _ _ -> <- " " })
           point = (subtract (integer (divide (columns) 2)) 12)
           point = (if (less_than point 0) {
             <- 0
@@ -138,7 +155,8 @@ screen = ({
     <- (if (is curr (get state APP_XY)){
       <- state
     } {
-      (print "\e[2;0H\e[0J")
+      (go_to 0 2)
+      (clear_below 2)
 
       <- (set state (list x y) APP_XY)
     })
@@ -211,19 +229,7 @@ canvas_16 = ({
 
   on_state = {
     (if (is (get state SIZE) 16) {
-      data = (get state DATA)
-
-      look = (map (range 16) { _ row -> 
-        <- (map (range 32) { _ col -> 
-          halfcol = (integer (divide col 2))
-          <- (if (is (get data (add (multiply row 16) halfcol)) void) {
-            <- ":"
-          } {
-            <- (background (get data (add (multiply row 16) halfcol)) " ")
-          })
-        })
-      })
-
+      look = (canvas_look_from_data 16 (get state DATA))
       (draw (dynamic_props canvas_16 look))
     })
 
@@ -236,26 +242,15 @@ canvas_16 = ({
 
       <- (if (is (mouse_over props mouse_xy) 1) {
         rc = (get_row_column_in_element props)
+        source_color = (get (get state DATA) (add (multiply (get rc 0) 16) (integer (divide (get rc 1) 2))))
 
-        source_color = (get (get state DATA) 
-          (add 
-            (multiply 
-              (get rc 0) 
-            8) 
-            (integer (divide 
-              (get rc 1) 
-            2)
-            )
-          )
-        )
-
-        data = (if (is mouse_code 16) {
-          <- (flood_fill  (get state DATA) (get rc 0) (integer (divide (get rc 1) 2)) 16 16 source_color (get state PAINTBRUSH))
+        // click is single pixel coloring, shift click is flood fill
+        data = (if (is mouse_code 4) {
+          <- (flood_fill (get state DATA) (get rc 0) (integer (divide (get rc 1) 2)) 16 16 source_color (get state PAINTBRUSH))
         } {
-         <- (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 16) (integer (divide (get rc 1) 2))))
-        }) 
+          <- (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 16) (integer (divide (get rc 1) 2))))
+        })
 
-        <- (set state data DATA)
         <- (set state data DATA)
       } {
         <- state
@@ -279,19 +274,7 @@ canvas_8 = ({
 
   on_state = {
     (if (is (get state SIZE) 8) {
-      data = (get state DATA)
-
-      look = (map (range 8) { _ row -> 
-        <- (map (range 16) { _ col -> 
-          halfcol = (integer (divide col 2))
-          <- (if (is (get data (add (multiply row 8) halfcol)) void) {
-            <- ":"
-          } {
-            <- (background (get data (add (multiply row 8) halfcol)) " ")
-          })
-        })
-      })
-      // draw new one
+      look = (canvas_look_from_data 8 (get state DATA))
       (draw (dynamic_props canvas_8 look))
     })
 
@@ -304,24 +287,14 @@ canvas_8 = ({
 
       <- (if (is (mouse_over props mouse_xy) 1) {
         rc = (get_row_column_in_element props)
+        source_color = (get (get state DATA) (add (multiply (get rc 0) 8) (integer (divide (get rc 1) 2))))
 
-        source_color = (get (get state DATA) 
-          (add 
-            (multiply 
-              (get rc 0) 
-            8) 
-            (integer (divide 
-              (get rc 1) 
-            2)
-            )
-          )
-        )
-
-        data = (if (is mouse_code 16) {
-          <- (flood_fill  (get state DATA) (get rc 0) (integer (divide (get rc 1) 2)) 8 8 source_color (get state PAINTBRUSH))
+        // click is single pixel coloring, shift click is flood fill
+        data = (if (is mouse_code 4) {
+          <- (flood_fill (get state DATA) (get rc 0) (integer (divide (get rc 1) 2)) 8 8 source_color (get state PAINTBRUSH))
         } {
-         <- (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 8) (integer (divide (get rc 1) 2))))
-        }) 
+          <- (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 8) (integer (divide (get rc 1) 2))))
+        })
 
         <- (set state data DATA)
       } {
@@ -560,7 +533,14 @@ palette_picker = ({
         <- void
       })
 
-      calculated = (if (is hovered void) {<- void } { <- (get (get (get state PALETTE) PALETTE_COLORS) hovered) })
+      calculated = (if (is hovered void) {
+        // -1 ius used to indicate that the candidate color is 
+        // not a color (represented by number) 
+        // nor is it transparent (represented by void)
+        <- (subtract 0 1) 
+      } { 
+        <- (get (get (get state PALETTE) PALETTE_COLORS) hovered) 
+      })
 
       <- (set state calculated CANDIDATE)
     } {
@@ -691,7 +671,7 @@ color_candidate_label = ({
       } (is candidate (subtract 0 1)) {
         <- (string_pad_end "" 13 " ")
       } {
-      <- (join (string_pad_end (string candidate) 3 " ") "   #" (ansi_8_to_hex candidate)) 
+        <- (join (string_pad_end (string candidate) 3 " ") "   #" (ansi_8_to_hex candidate)) 
       })
 
     (draw (dynamic_props color_candidate_label str))
@@ -721,7 +701,7 @@ button_size_8 = ({
   props = (list
     67
     2
-    // look for clickable elements must be in form of a 2d list
+    // the look of clickable elements must be in form of a 2d list
     (list
       (underline (list "8" "x" "8"))
     )
@@ -758,7 +738,7 @@ button_size_16 = ({
   props = (list
     74
     2
-    // look for clickable elements must be in form of a 2d list
+    // the look of clickable elements must be in form of a 2d list
     (list
       (underline (list "1" "6" "x" "1" "6"))
     )
@@ -802,7 +782,7 @@ button_exit = ({
   props = (list
     67
     19
-    // look for clickable elements must be in form of a 2d list
+    // the look of  clickable elements must be in form of a 2d list
     (list
      (underline (list "E" "x" "i" "t"))
     )
@@ -830,7 +810,7 @@ button_save = ({
   props = (list
     75
     19
-    // look for clickable elements must be in form of a 2d list
+    // the look of clickable elements must be in form of a 2d list
     (list
       (underline (list "S" "a" "v" "e"))
     )
@@ -863,6 +843,7 @@ button_save = ({
   <- (list props (list on_state on_loop void void on_click))
 })
 
+//*** "export"
 elements = (list 
   screen 
   centered_modal 

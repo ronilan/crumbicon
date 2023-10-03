@@ -38,7 +38,7 @@ crumbicon = { path_to_file ->
   }
 
   // show off
-  (set_up)
+  (clear_screen)
   (splash_screen)
   (wait 0.5)
   
@@ -54,7 +54,7 @@ crumbicon = { path_to_file ->
     <- (if (or (is crumbicon-data void) (is crumbicon-palette void)) {
       // file exist but was not created by crumbicon
       // send notice and exit
-      (set_up)
+      (clear_screen)
       (colored_splash_msg 9 (join path_to_file " is not a valid Crumbicon icon"))
       <- void
     } {

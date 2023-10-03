@@ -1,3 +1,26 @@
+// abstractions of escape codes
+hide_cursor = {
+  (print "\e[?25l")
+}
+
+show_cursor = {
+  (print "\e[?25h")
+}
+
+clear_below = {
+  (print "\e[0J")
+}
+
+// reset styling and jump to mouse_xy (0 0 is top left)
+go_to  = { x y ->
+ (print (join "\e[0;0m\e[" (string y) ";" (string x) "H"))
+}
+
+clear_screen = {
+  (go_to 0 0)
+  (clear_below)
+}
+
 // drawing elements
 draw = { props ->
   // all calculations are on a screen where top left is 0, 0
@@ -9,7 +32,7 @@ draw = { props ->
 
   // reset styling
   // jump to mouse_xy
-  (print (join "\e[0;0m\e[" (string y) ";" (string x) "H"))
+  (go_to x y)
 
   // print string
   (if (is (type element_look) "string") {
@@ -34,16 +57,6 @@ draw = { props ->
       })
     })
   })
-}
-
-set_up = {
-  // set up: hide cursor and clear
-  (print "\e[?25l\e[2J\e[H")
-}
-
-tear_down = {
-  // tear down: show cursor and clear
-  (print "\e[?25h\e[2J\e[H")
 }
 
 start = { state elements ->
@@ -114,8 +127,6 @@ start = { state elements ->
     })
   }
 
-  (set_up)
-
   listeners = (map elements { element index ->
     <- (if (is element void) {
       <- (list void void void void void)
@@ -154,7 +165,13 @@ start = { state elements ->
     <- (start state listeners)
   })
 
-  (tear_down)
+  (clear_screen)
+  (show_cursor)
 
   <- result
 }
+
+// whenever tui is used, even if not started hide cursor and clear screen
+// crumb shows cursor when exited
+(hide_cursor)
+(clear_screen)

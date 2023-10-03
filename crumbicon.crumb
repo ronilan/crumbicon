@@ -1,5 +1,4 @@
 (use "./usables/colors.crumb" {
-
   // argument is assumed to be a relative path.
   path_to_file = (if (is (length arguments) 2) {
     <- (get arguments 1)

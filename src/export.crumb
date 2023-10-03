@@ -10,9 +10,8 @@ svg = { data props palette target ->
     } "")
   }
 
-  (set_up)
+  (clear_screen)
   (colored_splash_msg 10 (join "Exporting " target))
-  (tear_down)
 
   num_rows = (get props 0)
   num_columns = (get props 1)
@@ -53,8 +52,7 @@ svg = { data props palette target ->
 
   (write_file target str)
 
-  (set_up)
+  (clear_screen)
   (colored_splash_msg 10 (join "Saved " target))
   (wait 0.5)
-  (tear_down)
 }
