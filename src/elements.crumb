@@ -1,5 +1,8 @@
 //*** utility functions shared by event functions
 
+// returns a props list where x and y are in relation to the app's x y
+// and the look is either as supplied or as default for element.
+// used by all elements
 dynamic_props = { element look ->
   <-(if (is (type state) "string" ){
     <- (list 0 0 "")
@@ -25,6 +28,8 @@ dynamic_props = { element look ->
   })
 }
 
+// finds the next best place to put a color in the palette
+// used in initialization of state and all pickers
 ideal_palette_index = { curr palette ->
   <- (if (is (find palette void) void) {
     <- (remainder (add curr 1) (length palette))
@@ -33,6 +38,7 @@ ideal_palette_index = { curr palette ->
   })
 }
 
+// used by all pickers
 set_palette_in_state = { value ->
   curr = (get (get state PALETTE) PALETTE_INDEX)
   palette = (set (get (get state PALETTE) PALETTE_COLORS) value curr)
@@ -98,6 +104,20 @@ canvas_look_from_data = { size data ->
   })
 }
 
+canvas_data_from_click = { props size data paintbrush ->
+  <- (if (is (mouse_over props mouse_xy) 1) {
+    rc = (get_row_column_in_element props)
+    source_color = (get data (add (multiply (get rc 0) size) (integer (divide (get rc 1) 2))))
+
+    // click is single pixel coloring, shift click is flood fill
+    <- (if (is mouse_code 4) {
+      <- (flood_fill data (get rc 0) (integer (divide (get rc 1) 2)) size size source_color paintbrush)
+    } {
+      <- (set data paintbrush (add (multiply (get rc 0) size) (integer (divide (get rc 1) 2))))
+    })
+  })
+}
+
 //***  settings
 app_width = 80
 app_height = 24
@@ -139,6 +159,8 @@ centered_modal = ({
   <- (list void (list on_state void void void void))
 })
 
+// utility element with no visible look.
+// clears screen on resize, handles app exit, "mouse out" of pickers.
 screen = ({
   props = (list 
     0
@@ -205,6 +227,7 @@ screen = ({
   <- (list props (list on_state on_loop on_keypress on_move void))
 })
 
+// top title bar, resizable but not moving.
 title = ({
   on_state = {
     look = (reduce (range (columns)) {accum _ _ -> <- (join accum " ") } "")
@@ -218,6 +241,7 @@ title = ({
   <- (list void (list on_state void void void void))
 })
 
+//* canvases
 canvas_16 = ({
   props = (list
     23
@@ -241,16 +265,7 @@ canvas_16 = ({
       props = (dynamic_props canvas_16 (get (get canvas_16 0) 2) )
 
       <- (if (is (mouse_over props mouse_xy) 1) {
-        rc = (get_row_column_in_element props)
-        source_color = (get (get state DATA) (add (multiply (get rc 0) 16) (integer (divide (get rc 1) 2))))
-
-        // click is single pixel coloring, shift click is flood fill
-        data = (if (is mouse_code 4) {
-          <- (flood_fill (get state DATA) (get rc 0) (integer (divide (get rc 1) 2)) 16 16 source_color (get state PAINTBRUSH))
-        } {
-          <- (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 16) (integer (divide (get rc 1) 2))))
-        })
-
+        data = (canvas_data_from_click props 16 (get state DATA) (get state PAINTBRUSH))
         <- (set state data DATA)
       } {
         <- state
@@ -286,16 +301,7 @@ canvas_8 = ({
       props = (dynamic_props canvas_8 (get (get canvas_8 0) 2) )
 
       <- (if (is (mouse_over props mouse_xy) 1) {
-        rc = (get_row_column_in_element props)
-        source_color = (get (get state DATA) (add (multiply (get rc 0) 8) (integer (divide (get rc 1) 2))))
-
-        // click is single pixel coloring, shift click is flood fill
-        data = (if (is mouse_code 4) {
-          <- (flood_fill (get state DATA) (get rc 0) (integer (divide (get rc 1) 2)) 8 8 source_color (get state PAINTBRUSH))
-        } {
-          <- (set (get state DATA) (get state PAINTBRUSH) (add (multiply (get rc 0) 8) (integer (divide (get rc 1) 2))))
-        })
-
+        data = (canvas_data_from_click props 8 (get state DATA) (get state PAINTBRUSH))
         <- (set state data DATA)
       } {
         <- state
@@ -308,6 +314,7 @@ canvas_8 = ({
   <- (list props (list on_state void void void on_click))
 })
 
+//* pickers
 color_picker = ({
   props = (list
     3
@@ -340,7 +347,6 @@ color_picker = ({
       calculated = (calculate_color props 12 16)
 
       state = (set_palette_in_state calculated)
-
       <- (set state calculated PAINTBRUSH)
     } {
       <- state
@@ -382,7 +388,6 @@ gray_picker = ({
       calculated = (calculate_color props 2 232)
 
       state = (set_palette_in_state calculated)
-
       <- (set state calculated PAINTBRUSH)
     } {
       <- state
@@ -425,8 +430,8 @@ sixteen_picker = ({
 
     <- (if (is (mouse_over props mouse_xy) 1) {
       calculated = (rgb_to_ansi_8 (ansi_8_to_rgb (calculate_color props 1 0)))
-      state = (set_palette_in_state calculated)
 
+      state = (set_palette_in_state calculated)
       <- (set state calculated PAINTBRUSH)
     } {
       <- state
@@ -467,7 +472,6 @@ empty_picker = ({
     <- (if (is (mouse_over props mouse_xy) 1) {
 
       state = (set_palette_in_state void)
-
       <- (set state void PAINTBRUSH)
     } {
       <- state
