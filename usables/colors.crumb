@@ -218,8 +218,7 @@ background = { color_definition to_color ->
   })
 }
 
-bold = { to_style -> <- (styling to_style "\e[1m" "\e[21m") }
-faint = { to_style -> <- (styling to_style "\e[2m" "\e[22m") }
-underline = { to_style -> <- (styling to_style "\e[4m" "\e[24m") }
-inverse = { to_style -> <- (styling to_style "\e[7m" "\e[27m") }
-
+bold = { to_style -> <- (styling to_style "\e[1m" "\e[0;0m") }
+faint = { to_style -> <- (styling to_style "\e[2m" "\e[0;0m") }
+underline = { to_style -> <- (styling to_style "\e[4m" "\e[0;0m") }
+inverse = { to_style -> <- (styling to_style "\e[7m" "\e[0;0m") }
