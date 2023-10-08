@@ -178,7 +178,7 @@ screen = ({
       <- state
     } {
       (go_to 0 2)
-      (clear_below 2)
+      (clear_below)
 
       <- (set state (list x y) APP_XY)
     })

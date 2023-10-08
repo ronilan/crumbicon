@@ -13,7 +13,7 @@ clear_below = {
 
 // reset styling and jump to mouse_xy (0 0 is top left)
 go_to  = { x y ->
- (print (join "\e[0;0m\e[" (string y) ";" (string x) "H"))
+ (print (join "\e[0;0m\e[" (string (add y 1)) ";" (string (add x 1)) "H"))
 }
 
 clear_screen = {
@@ -32,7 +32,7 @@ draw = { props ->
 
   // reset styling
   // jump to mouse_xy
-  (go_to x y)
+  (go_to (subtract x 1) (subtract y 1))
 
   // print string
   (if (is (type element_look) "string") {
