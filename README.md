@@ -4,9 +4,9 @@ Crumbicon is a mouse driven icon editor for your terminal.
 
 It creates, and then edits svg images that can be used as website favicons (i.e. the little icons that appear at the top tabs etc.). Icons can be 8 pixels by 8 pixels, or 16 pixels by 16 pixels, utilizing 256 colors. 
 
-It's written in Crumb.
+It's written in [Crumb](https://github.com/liam-ilan/crumb).
 
-<p align=center><a href="https://github.com/liam-ilan/crumb"><img src="./media/social.png" alt="banner" height="400"/></a></p>
+<p align=center><img src="./media/social.png" alt="banner" height="400"/></p>
 
 # Install
 
