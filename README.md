@@ -6,7 +6,7 @@ It creates, and then edits svg images that can be used as website favicons (i.e.
 
 It's written in Crumb.
 
-<p align=center><img src="./media/social.svg" alt="banner" height="200"/></p>
+<p align=center><img src="./media/social.png" alt="banner" height="200"/></p>
 
 # Install
 
