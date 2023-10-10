@@ -6,6 +6,8 @@ It creates, and then edits svg images that can be used as website favicons (i.e.
 
 It's written in Crumb.
 
+<p align=center><img src="./media/social.svg" alt="banner" height="200"/></p>
+
 # Install
 
 Running Crumb prams requires building the Crumb interpreter from source. That can be done locally, or within a Docker container that has a mounted volume to save drawn icons.
