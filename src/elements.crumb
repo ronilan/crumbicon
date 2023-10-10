@@ -184,15 +184,6 @@ screen = ({
     })
   }
 
-  on_keypress = {
-    // exit with escape
-    <- (if (is keypress_name "escape") {
-      <- void
-    } {
-      <- state
-    })
-  }
-
   on_move = {
     // for when the mouse is NOT over any picker/palette
     <- (if 
@@ -224,7 +215,7 @@ screen = ({
     <- state
   }
 
-  <- (list props (list on_state on_loop on_keypress on_move void))
+  <- (list props (list on_state on_loop void on_move void))
 })
 
 // top title bar, resizable but not moving.

@@ -18,7 +18,7 @@ then
   git reset --hard "$checkout"
   build_and_clean
   printf "\e[32mCrumb built successfully from %s\e[0m\n" "$checkout"
-elif [ "$(printf '%s' "$checkout" | cut -c 1)" = "v" ] # its is a sha
+elif [ "$(printf '%s' "$checkout" | cut -c 1)" = "v" ] # it is a sha
 then # assumed a version tag
   printf "\e[32mBuilding version %s \e[0m \n" "$checkout"
   git clone -c advice.detachedHead=false --branch "$checkout" --depth 1 https://github.com/liam-ilan/crumb.git $into
