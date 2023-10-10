@@ -77,6 +77,8 @@ This will save the generated icons to your current working directory!
 
 # Gallery
 
-<img src="./gallery/selfie.svg" width="64"><img src="./gallery/luffy.svg" width="64"><img src="./gallery/pinky.svg" width="64">
+> Made something cool with Crumbicon? Make a pull request!
+
+<img src="./gallery/selfie.svg" width="64"><img src="./gallery/luffy.svg" width="64"><img src="./gallery/pinky.svg" width="64"><img src="./gallery/lake.svg" width="64"><img src="./gallery/mondrian.svg" width="64">
 
 ###### Fabriqué au Canada : Made in Canada 🇨🇦
