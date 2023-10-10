@@ -75,5 +75,8 @@ This will save the generated icons to your current working directory!
 - Can open files created by Crumbicon.
 - Will abort when file is not created by Crumbicon, but there are issues. Avoid.
 
+# Gallery
+
+<img src="./gallery/selfie.svg" width="30"><img src="./gallery/pinkey.svg" width="30"><img src="./gallery/luffy.svg" width="30"> 
 
 ###### Fabriqué au Canada : Made in Canada 🇨🇦
