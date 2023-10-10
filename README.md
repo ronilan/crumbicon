@@ -77,6 +77,6 @@ This will save the generated icons to your current working directory!
 
 # Gallery
 
-<img src="./gallery/selfie.svg" width="30"><img src="./gallery/pinkey.svg" width="30"><img src="./gallery/luffy.svg" width="30"> 
+<img src="./gallery/selfie.svg" width="64"><img src="./gallery/luffy.svg" width="64"><img src="./gallery/pinky.svg" width="64">
 
 ###### Fabriqué au Canada : Made in Canada 🇨🇦
