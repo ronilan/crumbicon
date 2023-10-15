@@ -10,7 +10,7 @@ It's written in [Crumb](https://github.com/liam-ilan/crumb).
 
 # Install
 
-Running Crumb prams requires building the Crumb interpreter from source. That can be done locally, or within a Docker container that has a mounted volume to save drawn icons.
+Running Crumb programs requires building the Crumb interpreter from source. That can be done locally, or within a Docker container that has a mounted volume to save drawn icons.
 
 ### Locally
 

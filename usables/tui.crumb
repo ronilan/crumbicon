@@ -144,6 +144,8 @@ start = { state elements ->
   (loop (length listeners) { index -> 
     element = (get elements index)
     listener = (get listeners index)
+    // make sure that the variables available in the loop are also available in initial render
+    listener_index = index
   
     loop_count = 0 // listeners may use loop_count
     fn = (get (get listeners index) 0) 
