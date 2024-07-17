@@ -24,12 +24,19 @@ then
   cd $into || exit
   git reset --hard "$checkout"
   build_and_clean
-elif [ "$(printf '%s' "$checkout" | cut -c 1)" = "v" ] # it is a sha
+elif [ "$(printf '%s' "$checkout" | cut -c 1)" = "v" ] # it is a tag
 then # assumed a version tag
   printf "\e[32mBuilding version %s \e[0m \n" "$checkout"
   git clone -c advice.detachedHead=false --branch "$checkout" --depth 1 https://github.com/liam-ilan/crumb.git $into
   cd $into || exit
   build_and_clean
-else
-  printf "\e[31m%s not valid version tag nor SHA \e[0m\n" "$checkout"
+else ## try branch
+  printf "\e[32mBuilding version %s \e[0m \n" "$checkout"
+  if git clone -c advice.detachedHead=false --branch "$checkout" --depth 1 https://github.com/liam-ilan/crumb.git $into
+  then
+    cd $into || exit
+    build_and_clean
+  else
+    printf "\e[31m%s not valid version tag nor branch name nor SHA \e[0m\n" "$checkout"
+  fi
 fi
