@@ -59,7 +59,7 @@ draw = { props ->
   })
 }
 
-start = { state elements ->
+start = { state elements time ->
   // ** utility function
   list_to_string = { arr -> <- (reduce arr {accum item _ -> <- (join accum (string item))} "")}
 
@@ -165,7 +165,7 @@ start = { state elements ->
 
   // event loop
   result = (use "./usables/event-loop.crumb" { 
-    <- (start state listeners)
+    <- (start state listeners time)
   })
 
   (clear_screen)

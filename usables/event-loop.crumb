@@ -35,7 +35,7 @@ key_map = { sequence ->
 
 // starts the event loop
 // returns the final state
-start = { state listeners ->
+start = { state listeners time ->
 
   reduce_listeners = { event_index ->
     <- (reduce listeners { new_state listener listener_index ->
@@ -64,7 +64,7 @@ start = { state listeners ->
     // save state
     prev_state = state
     // get current event
-    curr = (event)
+    curr = (if (is time void) {<- (event)} {<- (event time)})
 
     // loop "synthetic event"
     state = (reduce_listeners 1)

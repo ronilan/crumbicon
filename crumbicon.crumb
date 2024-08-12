@@ -44,7 +44,7 @@
         void // save or abort?
       )
 
-      <- (start state elements)
+      <- (start state elements void)
     })
 
     // after UI is exited, check if save is needed.

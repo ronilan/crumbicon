@@ -1,5 +1,5 @@
 #!/bin/sh
-default="v0.0.2"
+default="v0.0.3"
 checkout=${1:-$default}
 into=".tmp~crumb~inflate"
 
