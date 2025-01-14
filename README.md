@@ -38,7 +38,7 @@ Run:
 
 Build: 
 ```
-docker build -t crumbicon docker build -q git@github.com:ronilan/crumbicon.git#main
+docker build -t crumbicon git@github.com:ronilan/crumbicon.git#main
 ```
 Run: 
 ```
