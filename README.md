@@ -24,15 +24,26 @@ CD into directory:
 cd crumbicon
 ```
 
-Build Crumb interpreter: 
+Build Crumb Interpreter and Loaf Bundler: 
 ```
 chmod +x build-crumb.sh && ./build-crumb.sh
 ```
 
-Run:
+Run (using interpreter):
 ```
 ./crumb crumbicon.crumb
 ```
+
+Build:
+```
+./loaf crumbicon.crumb crumbicon
+```
+
+Run (as stand alone executable):
+```
+./crumbicon
+```
+
 
 ### With Docker:
 
@@ -52,7 +63,8 @@ docker run --rm -it -v ${PWD}:/crumbicon/icons $(docker build -q git@github.com:
 
 Then in the shell:
 ```
-./crumb crumbicon.crumb ./icons/favicon.svg
+./loaf crumbicon.crumb crumbicon
+./crumbicon ./icons/favicon.svg
 ```
 
 This will save the generated icons to your current working directory!

@@ -25,5 +25,9 @@ node_modules/
 # in case
 .npmrc
 
-# do not include Crumb interpreter
+# do not include Crumb interpreter and bundler
 crumb
+loaf
+
+# do not include me as executable
+**/crumbicon
