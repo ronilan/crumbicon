@@ -63,7 +63,6 @@ docker run --rm -it -v ${PWD}:/crumbicon/icons $(docker build -q git@github.com:
 
 Then in the shell:
 ```
-./loaf crumbicon.crumb crumbicon
 ./crumbicon ./icons/favicon.svg
 ```
 

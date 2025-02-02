@@ -12,3 +12,6 @@ COPY . .
 
 # build crumb interpreter from source
 RUN chmod +x setup.sh && ./setup.sh
+
+# Build Crumbicon
+RUN ./loaf crumbicon.crumb crumbicon
