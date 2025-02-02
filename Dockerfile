@@ -11,4 +11,4 @@ WORKDIR crumbicon
 COPY . .
 
 # build crumb interpreter from source
-RUN chmod +x build-crumb.sh && ./build-crumb.sh
+RUN chmod +x setup.sh && ./setup.sh

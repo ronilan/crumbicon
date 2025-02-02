@@ -26,7 +26,7 @@ cd crumbicon
 
 Build Crumb Interpreter and Loaf Bundler: 
 ```
-chmod +x build-crumb.sh && ./build-crumb.sh
+chmod +x setup.sh && ./setup.sh
 ```
 
 Run (using interpreter):
