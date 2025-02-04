@@ -11,9 +11,9 @@ build_and_clean() {
 
   if $command;
   then
-    printf "\e[32m%s built successful\e[0m\n" "$exe"
+    printf "\e[32m%s build successful\e[0m\n" "$exe"
   else
-    printf "\e[31m%s built failed\e[0m\n" "$exe"
+    printf "\e[31m%s build failed\e[0m\n" "$exe"
     exit 1
   fi
     cd ..
