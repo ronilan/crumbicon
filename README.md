@@ -10,7 +10,15 @@ It's written in [Crumb](https://github.com/liam-ilan/crumb).
 
 # Install
 
-Running Crumb programs requires building the Crumb interpreter from source. That can be done locally, or within a Docker container that has a mounted volume to save drawn icons.
+## Pre Built Binaries
+
+Pre built binaries are provided for each [release](https://github.com/ronilan/crumbicon/releases).
+
+Note: `*-macos-13.tar.gz` is for Apple Silicon, `*-macos-13.tar.gz` is for Intel CPU.
+
+# From Source
+
+Building the app and toolchain from from source can be done locally, or within a Docker container that has a mounted volume to save drawn icons.
 
 ### Locally
 
@@ -43,7 +51,6 @@ Run (as stand alone executable):
 ```
 ./crumbicon
 ```
-
 
 ### With Docker:
 
