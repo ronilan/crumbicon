@@ -1,0 +1,43 @@
+env:
+  APP_NAME: "crumbicon"
+
+name: Build Release Binaries
+
+on:
+  release:
+    types: [ published ]
+
+permissions:
+  id-token: write
+  contents: write
+  attestations: write
+
+jobs:
+  setup_crumb:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-24.04, ubuntu-24.04-arm, macos-15, macos-13 ]
+
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v4
+
+      - name: Setup Crumb and Loaf on ${{ matrix.os }}
+        run: ./setup.sh
+
+      - name: Build artifact
+        run: ./loaf ${{ env.APP_NAME }}.crumb ${{ env.APP_NAME }}
+  
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ env.APP_NAME }}
+
+      - name: Zip artifact
+        run: tar -czf ${{ env.APP_NAME }}-${{ matrix.os }}.tar.gz ${{ env.APP_NAME }}
+
+      - name: Add zipped archive to release 
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.APP_NAME }}-${{ matrix.os }}.tar.gz
