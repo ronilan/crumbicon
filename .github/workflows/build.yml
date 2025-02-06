@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Crumb and Loaf on ${{ matrix.os }}
-        run: ./setup.sh
+        run: chmod +x setup.sh && ./setup.sh
 
       - name: Build artifact
         run: ./loaf ${{ env.APP_NAME }}.crumb ${{ env.APP_NAME }}
