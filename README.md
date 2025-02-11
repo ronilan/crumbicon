@@ -14,7 +14,7 @@ It's written in [Crumb](https://github.com/liam-ilan/crumb).
 
 Pre built binaries are provided for each [release](https://github.com/ronilan/crumbicon/releases).
 
-Note: `*-macos-13.tar.gz` is for Apple Silicon, `*-macos-13.tar.gz` is for Intel CPU.
+Note: `*-macos-15.tar.gz` is for Apple Silicon, `*-macos-13.tar.gz` is for Intel CPU.
 
 # From Source
 
