@@ -32,7 +32,8 @@ dynamic_props = { element look ->
 // used in initialization of state and all pickers
 ideal_palette_index = { curr palette ->
   <- (if (is (find palette void) void) {
-    <- (remainder (add curr 1) (length palette))
+    <- curr
+    // <- (remainder (add curr 1) (length palette))
   }{
     <- (find palette void)
   })
@@ -256,8 +257,16 @@ canvas_16 = ({
       props = (dynamic_props canvas_16 (get (get canvas_16 0) 2) )
 
       <- (if (is (mouse_over props mouse_xy) 1) {
-        data = (canvas_data_from_click props 16 (get state DATA) (get state PAINTBRUSH))
-        <- (set state data DATA)
+        <- (if (is mouse_code 16) {
+          rc = (get_row_column_in_element props)
+          calculated = (get (get state DATA) (add (multiply (get rc 0) 16) (integer (divide (get rc 1) 2))))
+
+          state = (set_palette_in_state calculated)
+          <- (set state calculated PAINTBRUSH)
+        } {
+          data = (canvas_data_from_click props 16 (get state DATA) (get state PAINTBRUSH))
+          <- (set state data DATA)
+        })
       } {
         <- state
       })

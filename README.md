@@ -84,6 +84,7 @@ This will save the generated icons to your current working directory!
 - Click to place them on the canvas.
 - Drag to draw multiple pixels.
 - Shift, Click for flood fill.
+- Ctrl + Click to pick color from canvas.
 - Palette at bottom allows to "collect colors". Click to choose where to place selected.
 - Save to save and exit.
 - Exit to exit without save.
@@ -92,7 +93,7 @@ This will save the generated icons to your current working directory!
 
 ## Files
 - Command line argument to provide file name `./crumb crumbicon.crumb ./icons/favicon.svg` 
-- Can open files created by Crumbicon.
+- Canopen files created by [Crubmicon](https://github.com/ronilan/crumbicon) (or by [Rusticon](https://github.com/ronilan/rusticon))
 - Will abort when file is not created by Crumbicon, but there are issues. Avoid.
 
 # Gallery
